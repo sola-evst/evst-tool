@@ -80,6 +80,16 @@ details summary{cursor:pointer;font-weight:700;font-size:13px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:520px){.two{grid-template-columns:1fr}.form{grid-template-columns:1fr}}
 ul.tight{margin:4px 0;padding-left:20px}
+.combo{position:relative}
+.combo select{display:none}
+.combo .cbox{display:flex;align-items:stretch}
+.combo .cbox input{border-top-right-radius:0;border-bottom-right-radius:0}
+.combo .cbox button{font:inherit;border:1px solid var(--line);border-left:0;background:var(--bg);color:var(--muted);border-radius:0 6px 6px 0;padding:0 8px;cursor:pointer}
+.combo ul{position:absolute;z-index:20;left:0;right:0;top:100%;margin:2px 0 0;padding:4px 0;list-style:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;max-height:260px;overflow:auto;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.combo li{padding:5px 10px;cursor:pointer;color:var(--ink);font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.combo li .m{color:var(--muted);font-size:12px;white-space:nowrap}
+.combo li[aria-selected="true"]{background:var(--accent-soft)}
+.combo li.empty{color:var(--muted);cursor:default}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 </head>
@@ -87,34 +97,39 @@ ul.tight{margin:4px 0;padding-left:20px}
 <div class="wrap">
 <header>
   <h1>エバスト計算ツール</h1>
-  <p>宝庫・魔獣のシミュ、編成ランキング、装備の最適化。しゃるるが動画で検証した式で計算しています。入力はこのブラウザに保存されます。最初に入っている数値はしゃるるの例なので、自分の値に書き換えて使ってください。</p>
+  <p>宝庫・魔獣のシミュ、編成ランキング、装備の最適化。しゃるるが動画で検証した式で計算しています。入力はこのブラウザに保存されます。</p>
 </header>
 
+<section class="panel" id="enemy">
+  <h2>敵（相手） <span class="pill">全ツール共通</span></h2>
+  <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+    <label for="g_kind">敵の種類<select id="g_kind"><option>宝庫</option><option>魔獣（ソロ）</option><option>魔獣（集結）</option><option>キザハシ</option><option>対人（野戦）</option><option>対人（集結）</option><option>施設攻撃</option><option>施設攻撃（集結）</option><option>施設防衛</option><option>資源地</option></select></label>
+    <label for="g_sp" id="g_sp_l">魔獣の種族<select id="g_sp"><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option></select></label>
+    <label for="g_type" id="g_type_l">敵の兵種<select id="g_type" class="typesel"></select></label>
+    <label for="g_attr">敵の属性<select id="g_attr" class="attrsel"></select></label>
+  </div>
+  <p class="note" id="g_note"></p>
+</section>
 <section class="panel" id="common">
   <h2>自分の基本ステータス <span class="pill">全ツール共通</span></h2>
   <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-    <label for="b_歩">歩兵の攻撃%（キャラ効果なし）<input id="b_歩" type="number" step="0.1" value="2272.3"></label>
-    <label for="b_弓">弓兵の攻撃%（キャラ効果なし）<input id="b_弓" type="number" step="0.1" value="1508.8"></label>
-    <label for="b_騎">騎兵の攻撃%（キャラ効果なし）<input id="b_騎" type="number" step="0.1" value="1492.8"></label>
-    <label for="c_def">防御効率%（主力の兵種）<input id="c_def" type="number" step="0.1" value="46.4"></label>
-    <label for="c_bonus">編成ボーナス倍率<input id="c_bonus" type="number" step="0.001" value="1.40"></label>
-    <label for="c_N">通常攻撃攻撃力%（装備）<input id="c_N" type="number" step="0.1" value="108"></label>
-    <label for="c_CH">チャージスキル攻撃力%（ALLタブ）<input id="c_CH" type="number" step="0.1" value="165.1"></label>
+    <label for="h_歩">歩兵の攻撃%（攻撃バッジ）<input id="h_歩" type="number" step="0.1" value="2500"></label>
+    <label for="h_弓">弓兵の攻撃%（攻撃バッジ）<input id="h_弓" type="number" step="0.1" value="2500"></label>
+    <label for="h_騎">騎兵の攻撃%（攻撃バッジ）<input id="h_騎" type="number" step="0.1" value="2500"></label>
+    <label for="c_def">防御効率%（主力の兵種）<input id="c_def" type="number" step="0.1" value="40"></label>
+    <label for="c_bonus">編成ボーナス%（2nd＋サポート）<input id="c_bonus" type="number" step="0.1" value="30"></label>
+    <label for="c_N">通常攻撃攻撃力%（装備）<input id="c_N" type="number" step="0.1" value="0"></label>
+    <label for="c_CH">チャージスキル攻撃力%（ALLタブ）<input id="c_CH" type="number" step="0.1" value="0"></label>
     <label for="c_total">出撃できる兵数<input id="c_total" type="number" step="1000" value="250000"></label>
   </div>
-  <details style="margin-top:10px">
-    <summary>攻撃バッジから「キャラ効果なし」の値を出す</summary>
-    <p class="note">出撃画面の攻撃バッジ(i)には、リーダー・サブの「歩兵攻撃力+84%」などのトリガーが入っています。バッジを見たときの編成と相手を選ぶと、それを引いた値を上の欄に入れます。</p>
-    <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-      <label for="h_歩">歩兵のバッジ%<input id="h_歩" type="number" step="0.1" value="2671.3"></label>
-      <label for="h_弓">弓兵のバッジ%<input id="h_弓" type="number" step="0.1" value="1613.8"></label>
-      <label for="h_騎">騎兵のバッジ%<input id="h_騎" type="number" step="0.1" value="1597.8"></label>
-      <label for="h_L">そのときのリーダー<select id="h_L" class="charsel"></select></label>
-      <label for="h_S">そのときのサブ<select id="h_S" class="charsel"></select></label>
-      <label for="h_tg">そのときの相手<select id="h_tg"><option value="宝庫:騎">宝庫（騎兵）</option><option value="宝庫:弓">宝庫（弓兵）</option><option value="宝庫:歩">宝庫（歩兵）</option><option value="魔獣">魔獣</option><option value="なし">それ以外</option></select></label>
-    </div>
-    <div class="row" style="margin-top:8px"><button class="btn small" id="h_go">計算して上に入れる</button><span class="note" id="h_out"></span></div>
-  </details>
+  <h3>攻撃バッジを見たときの編成</h3>
+  <p class="note">攻撃バッジには、そのときのリーダー・サブの「歩兵攻撃力+84%」などが入っています。ここで選ぶと、その分を自動で引いて「キャラ効果なし」の値にしてから計算します。わからなければ「なし」のままでOK（バッジの値をそのまま使います）。装備の「対宝庫攻撃力」「対魔獣攻撃力」などはバッジに入ったままになるので、宝庫を計算するときは宝庫の出撃画面、魔獣なら魔獣の出撃画面で見たバッジを入れると正確です。ここで選んだリーダー・サブは、宝庫シミュと魔獣シミュの「自分の編成」にも自動で入ります（あとから個別に変えてもOK）。</p>
+  <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+    <label for="h_L">そのときのリーダー<select id="h_L" class="charsel0"></select></label>
+    <label for="h_S">そのときのサブ<select id="h_S" class="charsel0"></select></label>
+    <label for="h_tg">バッジを見た画面<select id="h_tg"><option value="same">上で選んだ敵の出撃画面で見た</option><option value="なし">それ以外・わからない</option></select></label>
+  </div>
+  <p class="note" id="h_out"></p>
 </section>
 
 <nav class="tabs" role="tablist">
@@ -130,17 +145,16 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>宝庫の条件と編成</h2>
     <h3 style="margin-top:0">宝庫</h3>
+    <p class="note" id="v_enote"></p>
     <div class="form">
       <label for="v_lv">宝庫のLv<select id="v_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="11">秘宝庫（Lv10表示・実質Lv11）</option></select></label>
-      <label for="v_attr">宝庫の属性<select id="v_attr" class="attrsel"></select></label>
-      <label for="v_type">宝庫の兵種<select id="v_type" class="typesel"></select></label>
     </div>
     <h3>自分の編成</h3>
     <div class="form">
       <label for="v_L">リーダー<select id="v_L" class="charsel"></select></label>
       <label for="v_S">サブリーダー<select id="v_S" class="charsel"></select></label>
       <label for="v_main">主力の兵種<select id="v_main" class="typesel"></select></label>
-      <label for="v_tier">主力の段階<select id="v_tier"><option value="4">T4</option><option value="3">T3</option><option value="2">T2</option></select></label>
+      <label for="v_tier">主力の段階<select id="v_tier"><option value="4">T4</option><option value="3">T3</option><option value="2">T2</option><option value="1">T1</option></select></label>
       <label class="full" for="v_slot">安い枠（T1）1つの兵数<input id="v_slot" type="number" step="1000" placeholder="空欄＝おすすめの数"></label>
     </div>
     <p class="note" id="v_hint"></p>
@@ -161,10 +175,9 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>魔獣の条件と編成</h2>
     <h3 style="margin-top:0">魔獣</h3>
+    <p class="note" id="m_enote"></p>
     <div class="form">
       <label for="m_lv">魔獣のLv<input id="m_lv" type="number" value="34" min="1" max="60"></label>
-      <label for="m_attr">魔獣の属性<select id="m_attr" class="attrsel"></select></label>
-      <label for="m_sp">魔獣の種族<select id="m_sp"><option>その他</option><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option></select></label>
       <label for="m_hp">HP（空欄＝Lvから推定）<input id="m_hp" type="number" step="10000"></label>
       <label for="m_def">魔獣の防御効率%（空欄＝推定）<input id="m_def" type="number" step="0.1"></label>
     </div>
@@ -173,8 +186,9 @@ ul.tight{margin:4px 0;padding-left:20px}
       <label for="m_L">リーダー<select id="m_L" class="charsel"></select></label>
       <label for="m_S">サブリーダー<select id="m_S" class="charsel"></select></label>
       <label for="m_main">主力の兵種<select id="m_main" class="typesel"></select></label>
+      <label for="m_tier">主力の段階<select id="m_tier"><option value="4">T4</option><option value="3">T3</option><option value="2">T2</option><option value="1">T1</option></select></label>
     </div>
-    <p class="note">HPは 170,000×1.14^(Lv−28)、防御効率は Lv×0.87%、攻撃は 1,609×1.114^(Lv−27) で推定（ファルファラ・ウォッチャーで確認）。主力は基本ステータスの兵数で全員T4として計算します。</p>
+    <p class="note">HPは 170,000×1.14^(Lv−28)、防御効率は Lv×0.87%、攻撃は 1,609×1.114^(Lv−27) で推定（ファルファラ・ウォッチャーで確認）。主力は基本ステータスの兵数で、選んだ段階の兵として計算します。</p>
   </div>
   <div class="panel">
     <h2>結果</h2>
@@ -189,15 +203,10 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>ランキングの条件</h2>
     <h3 style="margin-top:0">相手</h3>
+    <p class="note" id="r_enote"></p>
     <div class="form">
-      <label class="full" for="r_mode">相手の種類<select id="r_mode"><option value="vault">宝庫（治療費が安い順）</option><option value="monster">魔獣（早く倒せる順）</option><option value="long">長期戦・施設・集結（与ダメが多い順）</option></select></label>
-      <label for="r_attr">相手の属性<select id="r_attr" class="attrsel"></select></label>
-      <label for="r_type" id="r_type_l">相手の兵種<select id="r_type" class="typesel"></select></label>
       <label for="r_lv" id="r_lv_l">Lv（宝庫は9・10、秘宝庫は11）<input id="r_lv" type="number" value="10"></label>
-      <label for="r_sp" id="r_sp_l">魔獣の種族<select id="r_sp"><option>その他</option><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option></select></label>
       <label for="r_T" id="r_T_l">戦うターン数<input id="r_T" type="number" value="100"></label>
-      <label class="chk" id="r_rally_l"><input id="r_rally" type="checkbox" checked>集結（集結部隊時が乗る）</label>
-      <label class="chk" id="r_fac_l"><input id="r_fac" type="checkbox" checked>施設（対施設が乗る）</label>
       <label class="chk" id="r_ctr_l"><input id="r_ctr" type="checkbox" checked>相手が反撃してくる</label>
     </div>
     <h3>自分の編成の絞り込み</h3>
@@ -224,8 +233,6 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>装備の条件</h2>
     <div class="form">
-      <label class="full" for="e_enemy">敵の種類<select id="e_enemy"><option>宝庫</option><option>魔獣（ソロ）</option><option>魔獣（集結）</option><option>対人（野戦）</option><option>対人（集結）</option><option>施設攻撃</option><option>施設攻撃（集結）</option><option>施設防衛</option><option>資源地</option></select></label>
-      <label for="e_sp">魔獣の種族<select id="e_sp"><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option><option>キザハシ</option></select></label>
       <label for="e_main">主力の兵種<select id="e_main" class="typesel"></select></label>
       <label for="e_attr">リーダーの属性<select id="e_attr" class="attrsel"></select></label>
       <label for="e_sn">与ダメのうち通常攻撃%<input id="e_sn" type="number" value="23"></label>
@@ -450,6 +457,8 @@ function runVault(L, S, p) {
   const c0 = costOf(main, r0.inj, V_HEAVY);
   let s = p.slot;
   if (!(s > 0)) s = Math.round(r0.injSum * 1.2 / 4 / 1000) * 1000;
+  if ((p.mainTier || 4) === (p.cheapTier || 1)) s = 0; // 主力も安い枠と同じ段階なら枠を分ける意味がない
+  s = Math.min(s, Math.floor(p.total / 4 / 1000) * 1000);
   const ct = p.cheapTier || 1;
   const slots = [{ type: p.main, tier: p.mainTier || 4, n: p.total - 3 * s }].concat(TYPES.map(T => ({ type: T, tier: ct, n: s })));
   const r = sim(L, S, slots, tg, o);
@@ -462,7 +471,7 @@ function monsterEnemy(lv, custom) {
   return Object.assign(e, custom || {});
 }
 function runMonster(L, S, p) {
-  const tg = { kind: "monster", attr: p.attr, species: p.species };
+  const tg = { kind: "monster", attr: p.attr, species: p.species, rally: p.rally };
   const atk = p.atkFinal || atkFor(L, S, tg, p.base);
   const E = monsterEnemy(p.lv, p.custom);
   const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
@@ -570,14 +579,14 @@ const store = {
 // ---------- 選択肢 ----------
 function fillSelects() {
   document.querySelectorAll(".charsel").forEach(s => { s.innerHTML = NAMES.map(n => `<option>${n}</option>`).join(""); });
+  document.querySelectorAll(".charsel0").forEach(s => { s.innerHTML = `<option value="">なし</option>` + NAMES.map(n => `<option>${n}</option>`).join(""); });
   document.querySelectorAll(".attrsel").forEach(s => { s.innerHTML = ATTRS.map(n => `<option>${n}</option>`).join(""); });
   document.querySelectorAll(".typesel").forEach(s => { s.innerHTML = TYPES.map(n => `<option value="${n}">${n}兵</option>`).join(""); });
 }
 const DEFAULTS = {
-  h_L: "ガイア", h_S: "サクヤ[爽涼]",
-  v_attr: "火", v_type: "騎", v_main: "歩", v_L: "ガイア", v_S: "サクヤ[爽涼]",
-  m_attr: "風", m_main: "歩", m_L: "ガイア", m_S: "サクヤ[爽涼]",
-  r_attr: "光", r_type: "弓",
+  g_kind: "宝庫", g_type: "騎", g_attr: "火",
+  v_main: "歩", v_L: "ガイア", v_S: "サクヤ[爽涼]",
+  m_main: "歩", m_L: "ガイア", m_S: "サクヤ[爽涼]",
   e_main: "歩", e_attr: "土",
 };
 function persistInputs() {
@@ -591,12 +600,93 @@ function persistInputs() {
     });
   });
 }
+function enemy() {
+  const k = $("g_kind").value, attr = $("g_attr").value, type = $("g_type").value, sp = $("g_sp").value;
+  const mon = k.startsWith("魔獣") || k === "キザハシ";
+  return { k, attr, type, sp: k === "キザハシ" ? "キザハシ" : sp, mon, vault: k === "宝庫", rally: k.includes("集結"), facility: k.startsWith("施設攻撃"), field: k === "対人（野戦）" };
+}
+function enemyTarget(E) {
+  if (E.vault) return { kind: "vault", attr: E.attr, type: E.type };
+  if (E.mon) return { kind: "monster", attr: E.attr, species: E.sp, rally: E.rally };
+  return { kind: "long", attr: E.attr, type: E.type, rally: E.rally, facility: E.facility, field: E.field };
+}
+function enemyUI() {
+  const E = enemy();
+  $("g_sp_l").classList.toggle("hidden", !E.mon || E.k === "キザハシ");
+  $("g_type_l").classList.toggle("hidden", E.mon);
+  const notes = {
+    "宝庫": "宝庫シミュ・編成ランキング（治療費順）・装備の最適化で使います。",
+    "キザハシ": "キザハシの強さはまだ検証していないので、魔獣と同じ計算（属性有利×1.23）で出します。HPなどは魔獣シミュで手入力してください。",
+  };
+  $("g_note").textContent = notes[E.k] || (E.mon ? "魔獣シミュ・編成ランキング（早く倒せる順）・装備の最適化で使います。" : "編成ランキング（長期戦・与ダメ順）と装備の最適化で使います。敵のHPや攻撃はわからないので、与ダメの比較だけです。");
+}
+$("g_kind").addEventListener("change", () => { enemyUI(); rankModeUI(); });
+function badgeAdd() {
+  const ln = $("h_L").value, sn = $("h_S").value, k = $("h_tg").value;
+  let tg = { kind: "long", attr: "", type: null };
+  if (k === "same") tg = enemyTarget(enemy());
+  const none = { n: "", at: "", tp: "", tr: [] };
+  const L = CH[ln] || none, S = CH[sn] || none;
+  if (!CH[ln] && !CH[sn]) return { 歩: 0, 弓: 0, 騎: 0 };
+  return atkFor(L, S, tg, { 歩: 0, 弓: 0, 騎: 0 });
+}
 function common() {
   const v = id => parseFloat($(id).value);
+  const add = badgeAdd(), base = {};
+  TYPES.forEach(T => { base[T] = (v("h_" + T) || 0) / 100 - add[T]; });
+  const b = v("c_bonus");
   return {
-    base: { 歩: v("b_歩") / 100, 弓: v("b_弓") / 100, 騎: v("b_騎") / 100 },
-    def: v("c_def") / 100, bonus: v("c_bonus"), N: v("c_N") / 100, CH: v("c_CH") / 100, total: v("c_total")
+    base, add,
+    def: v("c_def") / 100, bonus: b < 5 ? b : 1 + b / 100, N: (v("c_N") || 0) / 100, CH: (v("c_CH") || 0) / 100, total: v("c_total")
   };
+}
+function showBase() {
+  const c = common();
+  $("h_out").textContent = "計算に使うキャラ効果なしの攻撃%：" + TYPES.map(T => `${T}兵 ${fmt(c.base[T] * 100, 1)}%` + (c.add[T] ? `（バッジ−${fmt(c.add[T] * 100, 1)}%）` : "")).join("／");
+}
+
+
+// ---------- キャラ選択（入力して候補＋一覧） ----------
+const toKata = s => s.replace(/[\u3041-\u3096]/g, c => String.fromCharCode(c.charCodeAt(0) + 0x60));
+const norm = s => toKata(String(s).toLowerCase()).replace(/[\s・＝=\[\]［］（）()]/g, "");
+function makeCombo(sel) {
+  const wrap = document.createElement("div"); wrap.className = "combo";
+  sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
+  const box = document.createElement("div"); box.className = "cbox";
+  const inp = document.createElement("input"); inp.type = "text"; inp.autocomplete = "off"; inp.placeholder = "名前を入力（ひらがなOK）";
+  inp.id = sel.id + "_txt"; inp.setAttribute("role", "combobox"); inp.setAttribute("aria-expanded", "false");
+  const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "▼"; btn.setAttribute("aria-label", "一覧を開く"); btn.tabIndex = -1;
+  box.append(inp, btn); wrap.appendChild(box);
+  const ul = document.createElement("ul"); ul.className = "hidden"; ul.setAttribute("role", "listbox"); wrap.appendChild(ul);
+  // ラベルのクリックで入力欄へ
+  const lab = wrap.closest("label"); if (lab) lab.setAttribute("for", inp.id);
+  const opts = [...sel.options].map(o => ({ v: o.value, t: o.textContent, k: norm(o.textContent + (CH[o.value] ? CH[o.value].at + CH[o.value].tp : "")) }));
+  let cur = [], idx = -1;
+  const show = () => { inp.value = sel.value === "" ? (opts[0] && opts[0].v === "" ? opts[0].t : "") : sel.value; };
+  const close = () => { ul.classList.add("hidden"); inp.setAttribute("aria-expanded", "false"); };
+  const render = q => {
+    const nq = norm(q || "");
+    cur = nq ? opts.filter(o => o.k.includes(nq)) : opts.slice();
+    idx = cur.length ? 0 : -1;
+    ul.innerHTML = cur.length ? cur.map((o, i) => `<li role="option" data-i="${i}" aria-selected="${i === idx}"><span>${o.t}</span><span class="m">${CH[o.v] ? CH[o.v].at + "・" + CH[o.v].tp : ""}</span></li>`).join("") : `<li class="empty">見つかりません</li>`;
+    ul.classList.remove("hidden"); inp.setAttribute("aria-expanded", "true");
+  };
+  const mark = () => { ul.querySelectorAll("li[data-i]").forEach(li => li.setAttribute("aria-selected", +li.dataset.i === idx)); const a = ul.querySelector(`li[data-i="${idx}"]`); if (a && a.scrollIntoView) a.scrollIntoView({ block: "nearest" }); };
+  const pick = o => { if (!o) return; sel.value = o.v; show(); close(); sel.dispatchEvent(new Event("change")); };
+  inp.addEventListener("focus", () => { inp.select(); render(""); });
+  inp.addEventListener("input", () => render(inp.value));
+  inp.addEventListener("keydown", e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); if (ul.classList.contains("hidden")) render(""); else { idx = Math.min(cur.length - 1, idx + 1); mark(); } }
+    else if (e.key === "ArrowUp") { e.preventDefault(); idx = Math.max(0, idx - 1); mark(); }
+    else if (e.key === "Enter") { e.preventDefault(); pick(cur[idx]); inp.blur(); }
+    else if (e.key === "Escape") { close(); show(); }
+  });
+  inp.addEventListener("blur", () => setTimeout(() => { close(); show(); }, 120));
+  ul.addEventListener("mousedown", e => { const li = e.target.closest("li[data-i]"); if (li) { e.preventDefault(); pick(cur[+li.dataset.i]); inp.blur(); } });
+  btn.addEventListener("mousedown", e => e.preventDefault());
+  btn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); if (ul.classList.contains("hidden")) { if (document.activeElement === inp) render(""); else inp.focus(); } else { close(); } });
+  sel.addEventListener("change", show);
+  show();
 }
 
 // ---------- タブ ----------
@@ -608,22 +698,6 @@ function showTab(t) {
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => { showTab(b.dataset.tab); try { history.replaceState(null, "", "#" + b.dataset.tab); } catch (e) { location.hash = b.dataset.tab; } }));
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
-
-// ---------- バッジ逆算 ----------
-$("h_go").addEventListener("click", () => {
-  const L = CH[$("h_L").value], S = CH[$("h_S").value], k = $("h_tg").value;
-  let tg = { kind: "long", attr: "", type: null };
-  if (k.startsWith("宝庫")) tg = { kind: "vault", type: k.split(":")[1] };
-  if (k === "魔獣") tg = { kind: "monster", species: "その他" };
-  const add = atkFor(L, S, tg, { 歩: 0, 弓: 0, 騎: 0 });
-  const msg = [];
-  TYPES.forEach(T => {
-    const b = parseFloat($("h_" + T).value);
-    if (isFinite(b)) { const x = +(b - add[T] * 100).toFixed(1); $("b_" + T).value = x; $("b_" + T).dispatchEvent(new Event("change")); msg.push(`${T}兵 ${fmt(b, 1)}% − キャラ ${fmt(add[T] * 100, 1)}% = ${fmt(x, 1)}%`); }
-  });
-  $("h_out").textContent = msg.join(" ／ ");
-  renderAll();
-});
 
 // ---------- チャート ----------
 function chart(el, data, opt) {
@@ -646,7 +720,9 @@ function chart(el, data, opt) {
 function renderVault() {
   const c = common();
   const L = CH[$("v_L").value], S = CH[$("v_S").value];
-  const p = { lv: +$("v_lv").value, attr: $("v_attr").value, type: $("v_type").value, main: $("v_main").value, mainTier: +$("v_tier").value, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, slot: parseFloat($("v_slot").value) || 0 };
+  const E = enemy();
+  $("v_enote").innerHTML = E.vault ? `属性・兵種は上の「敵」の設定（${E.attr}・${E.type}兵）を使います。` : `<span class="pill bad">上の「敵の種類」が宝庫になっていません</span> 属性・兵種だけ使って宝庫として計算しています。`;
+  const p = { lv: +$("v_lv").value, attr: E.attr, type: E.type, main: $("v_main").value, mainTier: +$("v_tier").value, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, slot: parseFloat($("v_slot").value) || 0 };
   const r = runVault(L, S, p);
   const a = r.mainOnly, b = r.withSlot;
   const adv = TBEAT[p.main] === p.type, dis = TBEAT[p.type] === p.main;
@@ -659,10 +735,10 @@ function renderVault() {
   const slotHeavy = b.inj.slice(1).reduce((s, x) => s + x, 0) * 0.196, mainHeavy = b.inj[0] * 0.196;
   const wiped = b.left.slice(1).some(x => x < 1);
   $("v_tiles").innerHTML = `
-    <div class="tile hi"><div class="k">撃破まで（安い枠あり）</div><div class="v">${b.win ? b.turns + "回" : "倒せない"}</div><div class="s">戦闘報告では ${b.turns + 1} ターン</div></div>
+    <div class="tile hi"><div class="k">撃破まで（安い枠あり）</div><div class="v">${b.win ? b.turns + "回" : "倒せない"}</div><div class="s">${b.win ? `戦闘報告では ${b.turns + 1} ターン` : `${b.turns}ターン目に全滅`}</div></div>
     <div class="tile"><div class="k">負傷の合計</div><div class="v">${fmt(b.injSum)}</div><div class="s">重傷 ${fmt(b.heavy)}（主力 ${fmt(mainHeavy)}）</div></div>
     <div class="tile hi"><div class="k">治療費の合計</div><div class="v">${fmt(b.cost / 10000, 1)}万</div><div class="s">主力だけなら ${fmt(a.cost / 10000, 1)}万（${fmt(b.cost / a.cost * 100)}%）</div></div>
-    <div class="tile"><div class="k">安い枠 1つ</div><div class="v">${fmt(b.slot)}</div><div class="s">${wiped ? '<span class="pill bad">全滅する枠あり。増やして</span>' : `残り ${fmt(Math.min(...b.left.slice(1)))} 人`}</div></div>`;
+    <div class="tile"><div class="k">安い枠 1つ</div><div class="v">${fmt(b.slot)}</div><div class="s">${b.slot === 0 ? "主力がT1なので安い枠は使いません" : !b.win ? '<span class="pill bad">全滅して倒せない</span>' : wiped ? '<span class="pill bad">全滅する枠あり。増やして</span>' : `残り ${fmt(Math.min(...b.left.slice(1)))} 人`}</div></div>`;
   const rowsT = [
     ["主力の兵数", fmt(p.total), fmt(b.slots[0].n)], ["安い枠1つ", "0", fmt(b.slot)],
     ["撃破までの通常攻撃（報告ターン）", `${a.turns}（${a.turns + 1}）`, `${b.turns}（${b.turns + 1}）`],
@@ -679,12 +755,14 @@ function renderMonster() {
   const L = CH[$("m_L").value], S = CH[$("m_S").value];
   const custom = {}; const hp = parseFloat($("m_hp").value), df = parseFloat($("m_def").value);
   if (hp > 0) custom.HP = hp; if (isFinite(df)) custom.def = df / 100;
-  const p = { lv: +$("m_lv").value, attr: $("m_attr").value, species: $("m_sp").value, main: $("m_main").value, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, custom };
+  const E = enemy();
+  $("m_enote").innerHTML = E.mon ? `属性・種族は上の「敵」の設定（${E.attr}・${E.sp}）を使います。` : `<span class="pill bad">上の「敵の種類」が魔獣になっていません</span> 属性・種族だけ使って魔獣として計算しています。`;
+  const p = { lv: +$("m_lv").value, attr: E.attr, species: E.sp, rally: E.rally, main: $("m_main").value, mainTier: +$("m_tier").value, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, custom };
   const r = runMonster(L, S, p);
   const t1 = r.log[0] ? r.log[0].dmg : 0, t2loss = r.log[1] ? r.log[1].loss : (r.log[0] ? r.log[0].loss : 0);
   const chL = r.log.find(d => d.skL > 0), chS = r.log.find(d => d.skS > 0);
   $("m_tiles").innerHTML = `
-    <div class="tile hi"><div class="k">撃破まで</div><div class="v">${r.win ? r.turns + "回" : "倒せない"}</div><div class="s">戦闘報告では ${r.turns + 1} ターン</div></div>
+    <div class="tile hi"><div class="k">撃破まで</div><div class="v">${r.win ? r.turns + "回" : "倒せない"}</div><div class="s">${r.win ? `戦闘報告では ${r.turns + 1} ターン` : `${r.turns}ターンで打ち切り`}</div></div>
     <div class="tile"><div class="k">魔獣のHP</div><div class="v">${fmt(r.enemy.HP)}</div><div class="s">防御効率 ${fmt(r.enemy.def * 100, 1)}%</div></div>
     <div class="tile"><div class="k">1ターンの与ダメ（最初）</div><div class="v">${fmt(t1)}</div><div class="s">通常＋反撃。確率トリガーは平均</div></div>
     <div class="tile"><div class="k">リーダーのチャージ（初回）</div><div class="v">${chL ? fmt(chL.dmg) : "—"}</div><div class="s">${chL ? chL.t + "ターン目のそのターン合計" : "撃つ前に撃破"}</div></div>
@@ -705,15 +783,15 @@ function renderCharList() {
 $("r_all").addEventListener("click", () => { store.set("chars", NAMES.slice()); renderCharList(); });
 $("r_none").addEventListener("click", () => { store.set("chars", []); renderCharList(); });
 function rankModeUI() {
-  const m = $("r_mode").value;
+  const E = enemy(), m = rankMode();
   const show = (id, on) => $(id).classList.toggle("hidden", !on);
-  show("r_type_l", m !== "monster"); show("r_lv_l", m !== "long"); show("r_sp_l", m === "monster");
-  show("r_T_l", m === "long"); show("r_rally_l", m === "long"); show("r_fac_l", m === "long"); show("r_ctr_l", m === "long");
+  show("r_lv_l", m !== "long"); show("r_T_l", m === "long"); show("r_ctr_l", m === "long");
+  $("r_enote").textContent = m === "vault" ? `宝庫（${E.attr}・${E.type}兵）で、治療費が安い順に並べます。` : m === "monster" ? `${E.k}（${E.attr}・${E.sp}）で、早く倒せる順に並べます。` : `${E.k}（${E.attr}・${E.type}兵）で、決めたターン数の与ダメが多い順に並べます。`;
 }
-$("r_mode").addEventListener("change", rankModeUI);
+function rankMode() { const E = enemy(); return E.vault ? "vault" : E.mon ? "monster" : "long"; }
 $("r_go").addEventListener("click", () => { $("r_status").textContent = "計算中…"; setTimeout(renderRank, 20); });
 function renderRank() {
-  const c = common(), m = $("r_mode").value, lt = $("r_ltype").value, top = +$("r_n").value;
+  const c = common(), E = enemy(), m = rankMode(), lt = $("r_ltype").value, top = +$("r_n").value;
   const own = ownedChars().filter(n => CH[n]);
   const res = [];
   const t0 = performance.now();
@@ -724,13 +802,13 @@ function renderRank() {
       if (sn === ln) continue; const S = CH[sn];
       for (const mt of mains) {
         if (m === "vault") {
-          const r = runVault(L, S, { lv: +$("r_lv").value, attr: $("r_attr").value, type: $("r_type").value, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
+          const r = runVault(L, S, { lv: +$("r_lv").value, attr: E.attr, type: E.type, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
           const b = r.withSlot; res.push({ L: ln, S: sn, mt, key: b.cost, turns: b.turns, win: b.win, inj: b.injSum, cost: b.cost, slot: b.slot });
         } else if (m === "monster") {
-          const r = runMonster(L, S, { lv: +$("r_lv").value, attr: $("r_attr").value, species: $("r_sp").value, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
+          const r = runMonster(L, S, { lv: +$("r_lv").value, attr: E.attr, species: E.sp, rally: E.rally, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
           res.push({ L: ln, S: sn, mt, key: (r.win ? r.turns : 999) - r.total / 1e9, turns: r.turns, win: r.win, inj: r.injSum, avg: r.total / r.turns });
         } else {
-          const r = runLong(L, S, { attr: $("r_attr").value, type: $("r_type").value, T: +$("r_T").value, rally: $("r_rally").checked, facility: $("r_fac").checked, counter: $("r_ctr").checked, main: mt, total: c.total, base: c.base, bonus: c.bonus, N: c.N, CH: c.CH });
+          const r = runLong(L, S, { attr: E.attr, type: E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: $("r_ctr").checked, main: mt, total: c.total, base: c.base, bonus: c.bonus, N: c.N, CH: c.CH });
           const tot = r.total; res.push({ L: ln, S: sn, mt, key: -tot, tot, sh: [r.parts.nrm / tot, r.parts.ctr / tot, (r.parts.chL + r.parts.chS) / tot] });
         }
       }
@@ -775,7 +853,7 @@ document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click
   ["e_sn", "e_sc"].forEach(id => $(id).dispatchEvent(new Event("change"))); renderEquip();
 }));
 function weightFn() {
-  const c = common(), tp = $("e_main").value, el = $("e_attr").value, en = $("e_enemy").value, sp = $("e_sp").value;
+  const c = common(), tp = $("e_main").value, el = $("e_attr").value, E = enemy(), en = E.k, sp = E.sp;
   const shn = (+$("e_sn").value || 0) / 100, shc = (+$("e_sc").value || 0) / 100, shg = Math.max(0, 1 - shn - shc);
   $("e_sg").value = Math.round(shg * 100);
   const atk = c.base[tp] + 3.5; // キャラのトリガー分をおおよそ足す
@@ -784,7 +862,7 @@ function weightFn() {
   const useDef = $("e_def").checked;
   return nm => {
     const isAtk = nm === "攻撃力" || nm === tp + "兵攻撃力" || nm === el + "属性リーダー攻撃力" ||
-      (en === "宝庫" && nm === "対宝庫攻撃力") || (mon && (nm === "対魔獣攻撃力" || nm === "対" + sp + "攻撃力")) ||
+      (en === "宝庫" && nm === "対宝庫攻撃力") || (en === "キザハシ" && nm === "対キザハシ攻撃力") || (mon && (nm === "対魔獣攻撃力" || nm === "対" + sp + "攻撃力")) ||
       (en === "魔獣（集結）" && nm === "対集結魔獣攻撃力") || (ral && nm === "集結部隊時攻撃力") || (fac && nm === "対施設攻撃力") ||
       (en === "施設防衛" && nm === "施設防衛時攻撃力") || (en === "資源地" && nm === "対資源地攻撃力");
     if (isAtk) return gen;
@@ -826,17 +904,35 @@ function renderEquip() {
 }
 
 // ---------- まとめ ----------
-function renderAll() { renderVault(); renderMonster(); renderEquip(); }
+function renderAll() { showBase(); renderVault(); renderMonster(); renderEquip(); }
 fillSelects();
 persistInputs();
+document.querySelectorAll(".wrap select").forEach(s => { if (s.selectedIndex < 0 && s.options.length) s.selectedIndex = 0; });
+document.querySelectorAll(".charsel, .charsel0").forEach(makeCombo);
+{ const bb = parseFloat($("c_bonus").value); if (bb > 0 && bb < 5) { $("c_bonus").value = +((bb - 1) * 100).toFixed(1); $("c_bonus").dispatchEvent(new Event("change")); } }
 renderCharList();
 renderEqList();
+enemyUI();
 rankModeUI();
 document.querySelectorAll(".wrap input, .wrap select").forEach(el => {
-  if (el.closest("#e_list") || el.closest("#r_chars") || el.closest("#tab-rank") || el.id === "e_filter" || el.closest("details")) return;
+  if (el.closest("#e_list") || el.closest("#r_chars") || el.closest("#tab-rank") || el.id === "e_filter") return;
   el.addEventListener("change", renderAll);
 });
-["e_enemy", "e_sp", "e_main", "e_attr", "e_sn", "e_sc", "e_def", "e_own"].forEach(id => $(id).addEventListener("input", renderEquip));
+["e_main", "e_attr", "e_sn", "e_sc", "e_def", "e_own"].forEach(id => $(id).addEventListener("input", renderEquip));
+
+// 攻撃バッジの編成を、宝庫・魔獣の「自分の編成」に自動で入れる
+function syncFormation(which) {
+  const n = $(which === "L" ? "h_L" : "h_S").value;
+  if (!CH[n]) return;
+  for (const p of ["v", "m"]) {
+    const el = $(p + "_" + which); el.value = n; el.dispatchEvent(new Event("change"));
+    if (which === "L" && CH[n].tp !== "統率") { const mt = $(p + "_main"); mt.value = CH[n].tp; mt.dispatchEvent(new Event("change")); }
+  }
+  if (which === "L") { $("e_attr").value = CH[n].at; $("e_attr").dispatchEvent(new Event("change")); if (CH[n].tp !== "統率") { $("e_main").value = CH[n].tp; $("e_main").dispatchEvent(new Event("change")); } }
+  renderAll();
+}
+$("h_L").addEventListener("change", () => syncFormation("L"));
+$("h_S").addEventListener("change", () => syncFormation("S"));
 showTab(location.hash.slice(1));
 renderAll();
 renderRank();
