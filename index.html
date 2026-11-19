@@ -147,7 +147,7 @@ ul.tight{margin:4px 0;padding-left:20px}
     <h3 style="margin-top:0">宝庫</h3>
     <p class="note" id="v_enote"></p>
     <div class="form">
-      <label for="v_lv">宝庫のLv<select id="v_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="11">秘宝庫（Lv10表示・実質Lv11）</option></select></label>
+      <label for="v_lv">宝庫のLv<select id="v_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="8">Lv8</option><option value="11">秘宝庫（Lv10表示・実質Lv11）</option></select></label>
     </div>
     <h3>自分の編成</h3>
     <div class="form">
@@ -205,7 +205,7 @@ ul.tight{margin:4px 0;padding-left:20px}
     <h3 style="margin-top:0">相手</h3>
     <p class="note" id="r_enote"></p>
     <div class="form">
-      <label for="r_lv" id="r_lv_l">Lv（宝庫は9・10、秘宝庫は11）<input id="r_lv" type="number" value="10"></label>
+      <label for="r_lv" id="r_lv_l">Lv（宝庫は8〜10、秘宝庫は11）<input id="r_lv" type="number" value="10"></label>
       <label for="r_T" id="r_T_l">戦うターン数<input id="r_T" type="number" value="100"></label>
       <label class="chk" id="r_ctr_l"><input id="r_ctr" type="checkbox" checked>相手が反撃してくる</label>
     </div>
@@ -280,7 +280,7 @@ ul.tight{margin:4px 0;padding-left:20px}
   <h3>精度と、まだわかっていないこと</h3>
   <ul class="tight">
     <li>宝庫Lv10の実戦3戦で、撃破ターン±1、負傷−2〜−3%（実戦のほうが少し少ない）。終盤（11ターン目〜）に与ダメが予想より上がる現象があり、そのぶん安全側に出ます</li>
-    <li>宝庫の攻撃・防御は Lv9（攻撃6,830・防御37.5%）、Lv10（8,350・47%）、秘宝庫（9,900・50%、HP33万。11/19の火騎戦1回から）で測定。Lv11の通常宝庫は未対応</li>
+    <li>宝庫の攻撃・防御は Lv8（攻撃5,790・防御41%・HP22万）、Lv9（攻撃6,990・防御43.7%）、Lv10（8,350・47%）、秘宝庫（9,900・50%、HP33万。11/19の火騎戦1回から）で測定。Lv11の通常宝庫は未対応</li>
     <li>「兵士15%減ごと」は兵の減り方から計算。「野戦時のみ」「2部隊以上」「非ターゲット時」は乗らない前提</li>
     <li>長期戦モードは敵のHP・攻撃がわからないので、与ダメの比較だけ（被害は計算しない）</li>
   </ul>
@@ -302,7 +302,8 @@ const RES_UNIT = { 4: 89, 3: 45, 2: 30, 1: 15 };
 const RED_UNIT = { 4: 27, 3: 9, 2: 3, 1: 0 };
 const RES_PAIR = { 歩: ["食料", "石材"], 弓: ["食料", "木材"], 騎: ["木材", "石材"] };
 const VAULT = {
-  9: { HP: 260000, atk: 6830, def: 0.375 },
+  8: { HP: 220000, atk: 5790, def: 0.41 }, // 11/19 水歩戦から
+  9: { HP: 260000, atk: 6990, def: 0.437 }, // 11/14 闇歩・火歩で測り直し
   10: { HP: 290000, atk: 8350, def: 0.47 },
   11: { HP: 330000, atk: 9900, def: 0.50 }, // 秘宝庫（11/19 火騎戦から）
 };
@@ -334,7 +335,7 @@ function parseChars(txt) {
 function badgeOK(t, T, L, tg) {
   if (t === T || t === "全兵種" || t === L.at + "リーダー") return true;
   if (tg.kind !== "monster" && tg.type && t === "対" + tg.type) return true;
-  if (tg.kind === "monster" && (t === "対魔獣" || t === "対" + tg.species)) return true;
+  if (tg.kind === "monster" && ((t === "対魔獣" && !tg.notBeast) || t === "対" + tg.species)) return true;
   if (tg.facility && t === "対施設") return true;
   if (tg.rally && t === "集結部隊時") return true;
   if (tg.field && t === "野戦時のみ") return true;
@@ -350,7 +351,7 @@ function atkFor(L, S, tg, base) {
   return a;
 }
 function powerOf(c, tg) {
-  if (tg.kind === "monster" && c.spPow && (c.spPow.sp === "魔獣" || c.spPow.sp === tg.species)) return c.spPow.pw;
+  if (tg.kind === "monster" && c.spPow && ((c.spPow.sp === "魔獣" && !tg.notBeast) || c.spPow.sp === tg.species)) return c.spPow.pw;
   return c.pw;
 }
 
@@ -358,7 +359,7 @@ function powerOf(c, tg) {
 function sim(L, S, slots, tg, o) {
   const tsu = L.tp === "統率" ? 0.95 : 1;
   const sumT = f => [L, S].reduce((s, c) => s + c.tr.filter(([v, t]) => f(t)).reduce((a, [v]) => a + v, 0), 0);
-  const unit = tg.kind !== "monster";
+  const unit = tg.kind !== "monster" || !!tg.unitAttr; // キザハシは部隊戦と同じ相性（属性+0.114・兵種は統率で有利不利なし）
   const ch = o.CH + sumT(t => t === "チャージ" || (unit && tg.type && t === "対" + tg.type + "チャージ"));
   const ctr = sumT(t => t === "反撃");
   const p15 = sumT(t => t === "15%減");
@@ -472,6 +473,7 @@ function monsterEnemy(lv, custom) {
 }
 function runMonster(L, S, p) {
   const tg = { kind: "monster", attr: p.attr, species: p.species, rally: p.rally };
+  if (p.species === "キザハシ") Object.assign(tg, { type: "統率", unitAttr: true, notBeast: true });
   const atk = p.atkFinal || atkFor(L, S, tg, p.base);
   const E = monsterEnemy(p.lv, p.custom);
   const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
@@ -607,6 +609,7 @@ function enemy() {
 }
 function enemyTarget(E) {
   if (E.vault) return { kind: "vault", attr: E.attr, type: E.type };
+  if (E.k === "キザハシ") return { kind: "monster", attr: E.attr, species: "キザハシ", type: "統率", unitAttr: true, notBeast: true };
   if (E.mon) return { kind: "monster", attr: E.attr, species: E.sp, rally: E.rally };
   return { kind: "long", attr: E.attr, type: E.type, rally: E.rally, facility: E.facility, field: E.field };
 }
@@ -616,7 +619,7 @@ function enemyUI() {
   $("g_type_l").classList.toggle("hidden", E.mon);
   const notes = {
     "宝庫": "宝庫シミュ・編成ランキング（治療費順）・装備の最適化で使います。",
-    "キザハシ": "キザハシの強さはまだ検証していないので、魔獣と同じ計算（属性有利×1.23）で出します。HPなどは魔獣シミュで手入力してください。",
+    "キザハシ": "キザハシは兵種が統率なので兵種の有利・不利はなし。属性は対人と同じ計算（有利で+11.4%）と仮定しています（未検証）。魔獣シミュで計算でき、HP・防御は手入力してください。",
   };
   $("g_note").textContent = notes[E.k] || (E.mon ? "魔獣シミュ・編成ランキング（早く倒せる順）・装備の最適化で使います。" : "編成ランキング（長期戦・与ダメ順）と装備の最適化で使います。敵のHPや攻撃はわからないので、与ダメの比較だけです。");
 }
