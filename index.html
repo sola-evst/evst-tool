@@ -58,6 +58,7 @@ input[type=checkbox]{width:auto}
 .tile .k{font-size:12px;color:var(--muted)}
 .tile .v{font-family:var(--display);font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.3}
 .tile .s{font-size:12px;color:var(--muted)}
+#v_table .hl{background:var(--accent-soft);color:var(--accent);font-weight:700}#v_table th.hl{border-bottom:2px solid var(--accent)}#v_table tr.tot td{font-weight:700}
 .tile.hi{border-color:var(--accent);background:var(--accent-soft)}
 table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
 th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
@@ -67,6 +68,7 @@ td.n,th.n{text-align:right;white-space:nowrap}
 .pill{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;background:var(--teal-soft);color:var(--teal);white-space:nowrap}
 .pill.ember{background:var(--accent-soft);color:var(--accent)}
 .pill.bad{background:transparent;border:1px solid var(--bad);color:var(--bad)}
+.tierS{background:#e8a33d;color:#fff}.tierA{background:#7b6cd9;color:#fff}.tierB{background:#3a9bd9;color:#fff}.tierC{background:#5fae6b;color:#fff}.tierD{background:#999;color:#fff}
 .pill.good{background:transparent;border:1px solid var(--good);color:var(--good)}
 details{border:1px solid var(--line);border-radius:8px;padding:8px 12px;background:var(--bg)}
 details summary{cursor:pointer;font-weight:700;font-size:13px}
@@ -103,7 +105,7 @@ ul.tight{margin:4px 0;padding-left:20px}
 <section class="panel" id="enemy">
   <h2>敵（相手） <span class="pill">全ツール共通</span></h2>
   <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
-    <label for="g_kind">敵の種類<select id="g_kind"><option>宝庫</option><option>魔獣（ソロ）</option><option>魔獣（集結）</option><option>キザハシ</option><option>対人（野戦）</option><option>対人（集結）</option><option>施設攻撃</option><option>施設攻撃（集結）</option><option>施設防衛</option><option>資源地</option></select></label>
+    <label for="g_kind">敵の種類<select id="g_kind"><option>宝庫</option><option>魔獣（ソロ）</option><option>魔獣（集結）</option><option>キザハシ</option><option>領域改稿</option><option>レイド</option><option>アリーナ</option><option>対人（野戦）</option><option>対人（集結）</option><option>施設攻撃</option><option>施設攻撃（集結）</option><option>施設防衛</option><option>資源地</option></select></label>
     <label for="g_sp" id="g_sp_l">魔獣の種族<select id="g_sp"><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option></select></label>
     <label for="g_type" id="g_type_l">敵の兵種<select id="g_type" class="typesel"></select></label>
     <label for="g_attr">敵の属性<select id="g_attr" class="attrsel"></select></label>
@@ -127,6 +129,7 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
     <label for="h_L">そのときのリーダー<select id="h_L" class="charsel0"></select></label>
     <label for="h_S">そのときのサブ<select id="h_S" class="charsel0"></select></label>
+    <label for="h_R">そのときの3rd（奈落・アリーナ）<select id="h_R" class="charsel0"></select></label>
     <label for="h_tg">バッジを見た画面<select id="h_tg"><option value="same">上で選んだ敵の出撃画面で見た</option><option value="なし">それ以外・わからない</option></select></label>
   </div>
   <p class="note" id="h_out"></p>
@@ -136,6 +139,7 @@ ul.tight{margin:4px 0;padding-left:20px}
   <button role="tab" data-tab="vault" aria-selected="true">宝庫シミュ</button>
   <button role="tab" data-tab="monster" aria-selected="false">魔獣シミュ</button>
   <button role="tab" data-tab="rank" aria-selected="false">編成ランキング</button>
+  <button role="tab" data-tab="tier" aria-selected="false">ティア表</button>
   <button role="tab" data-tab="equip" aria-selected="false">装備の最適化</button>
   <button role="tab" data-tab="about" aria-selected="false">前提と注意</button>
 </nav>
@@ -209,6 +213,16 @@ ul.tight{margin:4px 0;padding-left:20px}
       <label for="r_T" id="r_T_l">戦うターン数<input id="r_T" type="number" value="100"></label>
       <label class="chk" id="r_ctr_l"><input id="r_ctr" type="checkbox" checked>相手が反撃してくる</label>
     </div>
+    <div class="form hidden" id="r_arena">
+      <label for="a_T">戦うターン数（チャージ10ターンごと）<input id="a_T" type="number" value="40"></label>
+      <label for="a_p">範囲チャージが当たる部隊数の確率（1〜5部隊、%）<input id="a_p" type="text" value="30,40,30,0,0"></label>
+    </div>
+    <div class="form hidden" id="r_boss">
+      <label for="r_bbase">攻撃%（キャラ効果なし・全兵種）<input id="r_bbase" type="number" value="3000"></label>
+      <label for="r_btot">1部隊の兵数<input id="r_btot" type="number" value="2300000"></label>
+      <label class="chk"><input id="r_brally" type="checkbox" checked>集結で攻撃（「集結部隊時」が発動）</label>
+      <label class="chk"><input id="r_bdeb" type="checkbox">敵被ダメ+X%も自分のダメージに数える</label>
+    </div>
     <h3>自分の編成の絞り込み</h3>
     <div class="form">
       <label for="r_ltype">リーダーの兵種<select id="r_ltype"><option value="">すべて</option><option>歩</option><option>弓</option><option>騎</option></select></label>
@@ -220,11 +234,36 @@ ul.tight{margin:4px 0;padding-left:20px}
       <div class="charlist" id="r_chars"></div>
     </details>
     <div class="row" style="margin-top:10px"><button class="btn" id="r_go">ランキングを出す</button><span class="note" id="r_status"></span></div>
-    <p class="note">全員完凸、編成ボーナスは基本ステータスの値で一定として比べます。宝庫は安い枠をおすすめの数で入れて計算。</p>
+    <p class="note">全員完凸、編成ボーナスは基本ステータスの値で一定として比べます。宝庫は安い枠をおすすめの数で入れて計算。領域改稿・レイドは2部隊を出す前提で、キャラがかぶらない2部隊の組み合わせを、2部隊の与ダメ合計が多い順に並べます（「2部隊以上」は敵2部隊以上と同時に戦うときの効果なので、ボス戦では発動しない扱い）。</p>
   </div>
   <div class="panel">
     <h2>結果</h2>
     <div class="scroll"><table id="r_table"></table></div>
+  </div>
+</section>
+
+<!-- ===== ティア表 ===== -->
+<section id="tab-tier" class="grid hidden">
+  <div class="panel">
+    <h2>ティア表の条件</h2>
+    <div class="form">
+      <label for="t_mode">コンテンツ<select id="t_mode"><option value="vault">宝庫（21種類すべて）</option></select></label>
+      <label for="t_lv">宝庫のLv<select id="t_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="8">Lv8</option><option value="11">秘宝庫</option></select></label>
+      <label for="t_ltype">主力の兵種<select id="t_ltype"><option value="">すべて</option><option>歩</option><option>弓</option><option>騎</option></select></label>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="t_go">ティア表を作る</button><span class="note" id="t_status"></span></div>
+    <p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。7属性×3兵種＝21種類の宝庫それぞれで全ペアの治療費を出し、その宝庫の最安を1として「最安÷治療費」で点数にします。</p>
+    <ul class="note">
+      <li><b>ペア</b>：21種類の宝庫での点数の平均。1位比の列は、点数が一番高いペアを1としたときの比です。</li>
+      <li><b>ソロ</b>：宝庫ごとに「そのキャラが入った一番いいペア」の点数をとり、21種類で平均。リーダーとサブは別々に評価します。</li>
+      <li><b>1位の数</b>：そのペア・キャラで最安になる宝庫の数。<b>苦手</b>：点数が0.8未満の宝庫。</li>
+      <li>ティアは点数の「すき間」で5つに分けます（近い点数どうしを同じグループにする区切り方）。S〜Dが必ずそろいます。ペアは上位300ペアの中で分けます。</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h2>ソロ（リーダー）</h2><div class="scroll"><table id="t_lead"></table></div>
+    <h2>ソロ（サブ）</h2><div class="scroll"><table id="t_sub"></table></div>
+    <h2>ペア</h2><div class="scroll"><table id="t_pair"></table></div>
   </div>
 </section>
 
@@ -339,13 +378,17 @@ function badgeOK(t, T, L, tg) {
   if (tg.facility && t === "対施設") return true;
   if (tg.rally && t === "集結部隊時") return true;
   if (tg.field && t === "野戦時のみ") return true;
+  if (tg.multi && t === "2部隊以上") return true;
   return false;
 }
-function atkFor(L, S, tg, base) {
+function atkFor(L, S, tg, base, R) {
   const a = {};
   for (const T of TYPES) {
     let x = base[T];
-    for (const c of [L, S]) for (const [v, t] of c.tr) if (badgeOK(t, T, L, tg)) x += v;
+    for (const c of [L, S, R].filter(Boolean)) for (const [v, t] of c.tr) {
+      if (t === "2部隊以上" && tg.multiP) x += v * tg.multiP; // 敵2部隊以上と戦っている確率ぶん
+      else if (badgeOK(t, T, L, tg)) x += v;
+    }
     a[T] = x;
   }
   return a;
@@ -357,13 +400,14 @@ function powerOf(c, tg) {
 
 /* sim: slots [{type,tier,n}], opt {atk (final per type), bonus, ourDef, N, CH, short, maxT, enemy:{HP,atk,def,K,charge}} */
 function sim(L, S, slots, tg, o) {
+  const R = o.third || null, CS = [L, S, R].filter(Boolean);
   const tsu = L.tp === "統率" ? 0.95 : 1;
-  const sumT = f => [L, S].reduce((s, c) => s + c.tr.filter(([v, t]) => f(t)).reduce((a, [v]) => a + v, 0), 0);
+  const sumT = f => CS.reduce((s, c) => s + c.tr.filter(([v, t]) => f(t)).reduce((a, [v]) => a + v, 0), 0);
   const unit = tg.kind !== "monster" || !!tg.unitAttr; // キザハシは部隊戦と同じ相性（属性+0.114・兵種は統率で有利不利なし）
   const ch = o.CH + sumT(t => t === "チャージ" || (unit && tg.type && t === "対" + tg.type + "チャージ"));
   const ctr = sumT(t => t === "反撃");
   const p15 = sumT(t => t === "15%減");
-  const probs = [L, S].flatMap(c => c.tr.filter(([v, t]) => t.startsWith("P")).map(([v, t]) => [parseFloat(t.slice(1)) / 100, v]));
+  const probs = CS.flatMap(c => c.tr.filter(([v, t]) => t.startsWith("P")).map(([v, t]) => [parseFloat(t.slice(1)) / 100, v]));
   const n = slots.map(s => s.n), n0 = n.reduce((a, b) => a + b, 0);
   const mainT = TYPES.reduce((b, T) => (slots.filter(s => s.type === T).reduce((a, s) => a + s.n, 0) > slots.filter(s => s.type === b).reduce((a, s) => a + s.n, 0) ? T : b), slots[0].type);
   const A = o.atk[mainT];
@@ -371,11 +415,13 @@ function sim(L, S, slots, tg, o) {
   const advf = (attr, share) => unit ? 1 + 0.114 * (BEAT[attr] === tg.attr) + 0.152 * share : (BEAT[attr] === tg.attr ? 1.23 : 1);
   const short = Math.min(7, o.short || 0);
   const fst = Math.max(1, 11 - short), dly = 2;
-  const pL = powerOf(L, tg), pS = powerOf(S, tg);
+  const pL = powerOf(L, tg), pS = powerOf(S, tg), pR = R ? powerOf(R, tg) : 0;
+  const aoe = o.aoe || (() => 1);
+  let redAcc = 0;
   let hp = E.HP, t = 0, tot = 0;
   const inj = slots.map(() => 0);
   const turns = [];
-  const parts = { nrm: 0, ctr: 0, chL: 0, chS: 0 };
+  const parts = { nrm: 0, ctr: 0, chL: 0, chS: 0, chR: 0 };
   const maxT = o.maxT || 60;
   while (hp > 0 && t < maxT && n.reduce((a, b) => a + b, 0) > 1e-9) {
     t++;
@@ -393,16 +439,24 @@ function sim(L, S, slots, tg, o) {
     const nrmF = Math.pow((1 + AN) / (1 + A), EX) * (1 + probs.reduce((s, [p, v]) => s + p * (Math.pow((1 + AN + v) / (1 + AN), EX) - 1), 0));
     const ctrF = Math.pow((1 + A + ctr) / (1 + A), EX);
     const cf = Math.pow((1 + A + ch) / (1 + A), EX);
-    const u = t - fst, us = u - dly;
-    let skL = 0, skS = 0;
-    if (u >= 0 && u % 10 === 0) skL = cf * pL / 100 * ((Math.floor(u / 10) % L.cyc) + 1);
-    if (us >= 0 && us % 10 === 0) skS = cf * pS / 100 * ((Math.floor(us / 10) % S.cyc) + 1) * sadv / adv;
-    const bL = (u >= 1 && (u - 1) % 10 < L.bd) ? L.b : 0;
-    const bS = (us >= 1 && (us - 1) % 10 < S.bd) ? S.b : 0;
-    const mult = h0 * m * (1 + bL) * (1 + bS);
-    const dN = mult * nrmF, dC = mult * ctrF, dL = mult * skL, dS = mult * skS;
-    const dmg = dN + dC + dL + dS;
-    parts.nrm += dN; parts.ctr += dC; parts.chL += dL; parts.chS += dS;
+    const u = t - fst, us = u - dly, ur = u - 2 * dly;
+    let skL = 0, skS = 0, skR = 0;
+    if (u >= 0 && u % 10 === 0) skL = cf * pL / 100 * ((Math.floor(u / 10) % L.cyc) + 1) * aoe(L);
+    if (us >= 0 && us % 10 === 0) skS = cf * pS / 100 * ((Math.floor(us / 10) % S.cyc) + 1) * sadv / adv * aoe(S);
+    if (R && ur >= 0 && ur % 10 === 0) skR = cf * pR / 100 * ((Math.floor(ur / 10) % R.cyc) + 1) * advf(R.at, share) / adv * aoe(R);
+    const skipB = c => o.noDebuff && c.eff.startsWith("敵被ダメ"); // 敵被ダメ+は他の人が入れる前提なら数えない
+    const bL = (u >= 1 && (u - 1) % 10 < L.bd && !skipB(L)) ? L.b : 0;
+    const bS = (us >= 1 && (us - 1) % 10 < S.bd && !skipB(S)) ? S.b : 0;
+    const bR = (R && ur >= 1 && (ur - 1) % 10 < R.bd && !skipB(R)) ? R.b : 0;
+    const mult = h0 * m * (1 + bL) * (1 + bS) * (1 + bR);
+    const dN = mult * nrmF, dC = mult * ctrF, dL = mult * skL, dS = mult * skS, dR = mult * skR;
+    const dmg = dN + dC + dL + dS + dR;
+    parts.nrm += dN; parts.ctr += dC; parts.chL += dL; parts.chS += dS; parts.chR += dR;
+    { let rr = 0; // 被害の軽減（自被ダメ−・敵与ダメ−）
+      if (u >= 1 && (u - 1) % 10 < (L.bd || 2) && L.red) rr += L.red;
+      if (us >= 1 && (us - 1) % 10 < (S.bd || 2) && S.red) rr += S.red;
+      if (R && ur >= 1 && (ur - 1) % 10 < (R.bd || 2) && R.red) rr += R.red;
+      redAcc += Math.max(0.1, 1 - rr); }
     // 被害
     let loss = 0;
     if (E.atk) {
@@ -426,9 +480,9 @@ function sim(L, S, slots, tg, o) {
       }
     }
     hp -= dmg; tot += dmg;
-    turns.push({ t, dmg, loss, hp: Math.max(0, hp), skL, skS });
+    turns.push({ t, dmg, loss, hp: Math.max(0, hp), skL, skS, skR });
   }
-  return { turns: t, win: hp <= 0, total: tot, inj, injSum: inj.reduce((a, b) => a + b, 0), left: n, parts, log: turns };
+  return { turns: t, win: hp <= 0, total: tot, inj, injSum: inj.reduce((a, b) => a + b, 0), left: n, parts, log: turns, redAvg: t ? redAcc / t : 1 };
 }
 
 function vaultTarget(lv, attr, type) { return { kind: "vault", attr, type }; }
@@ -491,7 +545,60 @@ function runLong(L, S, p) {
   if (!p.counter) { r.total -= r.parts.ctr; r.parts.ctr = 0; }
   return Object.assign(r, { atk });
 }
-if (typeof module !== "undefined") module.exports = { parseChars, sim, runVault, runMonster, runLong, atkFor, TYPES, VAULT, BEAT, TBEAT };
+// 領域改稿・レイド：HPは不明なので T ターンの与ダメ合計で比べる。2部隊出す前提（キャラがかぶらない組み合わせ）
+// 「2部隊以上」＝2部隊以上の敵と同時に戦うとき（ボス1体なので発動しない）
+function runBoss(L, S, p) {
+  const tg = { kind: "monster", attr: p.attr, species: p.species, rally: p.rally, multi: !!p.multi };
+  const atk = atkFor(L, S, tg, p.base);
+  const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
+  const slots = [{ type: p.main, tier: 4, n: p.total }];
+  const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: 0, N: p.N, CH: p.CH, short, enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T, noDebuff: p.noDebuff });
+  if (!p.counter) { r.total -= r.parts.ctr; r.parts.ctr = 0; }
+  return Object.assign(r, { atk });
+}
+// ===== アリーナ（精鋭T3・3人編成） =====
+const WORLD = {};
+[["アンブレイン", "リアム,サクヤ,ジュード,シーピー,アレクシア,ステラ,サクヤ[爽涼],ロウ,リアム[夜魔]"],
+ ["イルドリム", "イヴァール,ブリュンヒルド,シグルドリーヴァ,ノート,エルフリーデ,エーリカ,シグルドリーヴァ[葬姫],カーラ,エイル"],
+ ["プロメテア", "ニュクス,アイテール,ケイオス,ゲラルデスカ,ヘーメラー,ニュクス[蒼炎],ガイア,エレボス,ウラノス"],
+ ["ガルガバル", "星吠えのヴァルト,鋼砕きのサバナ,闇酔いのエプレ,エプレ[情夏],大角のビランディ,小夜守のシャオレイ,爪撫でのニャマ,銀光のライガ,月歌いのチモシー"],
+ ["ズィーヤード", "ウルファ,メリケ,ダリューシュ,ウルファ[遊泳],アレフ,カリーム,アイーシャ,ライラ,シーリーン"],
+ ["ティル", "ノア＝レス,マエル＝イッド,アリアーディス,エリ＝アノン,ヘラ＝ネア,キエル＝ガン,コン＝ドウィン,グウィン＝リン"],
+ ["スオウ", "吉備 紫津乃,朱天 暁,紫津乃[炎天],朱天 残夜,葉 早雲,白幽姫,鵤 美鈴,叢雲 昏葉"],
+ ["異世界", "カイネ,2B,フィオ,ビビ,ジタン,ギュスターヴ,ジニー,ティーダ,ユウナ,ライトニング,ヴァニラ,魔人フィーナ,レイン,フィーナ"]]
+  .forEach(([w, names]) => names.split(",").forEach(n => WORLD[n] = w));
+// 2ndのボーナス：基本18＋兵種一致10（統率は一致あつかい）＋属性一致5＋出身世界一致1。3rdはその半分
+function subBonus(L, c) {
+  if (!c) return 0;
+  const typeOK = c.tp === L.tp || c.tp === "統率" || L.tp === "統率";
+  return (18 + (typeOK ? 10 : 0) + (c.at === L.at ? 5 : 0) + (WORLD[c.n] && WORLD[c.n] === WORLD[L.n] ? 1 : 0)) / 100;
+}
+function formBonus(L, S, R, support) { return 1 + subBonus(L, S) + subBonus(L, R) / 2 + (support || 0); }
+// 範囲チャージ：扇形は最大5部隊、減り方 1,0.85,0.70,0.55,0.45（サクヤ・エリ＝アノンは減り方なし）
+const FAN = new Set("シーピー,ノート,ゲラルデスカ,魔人フィーナ,アイテール,サクヤ,ブリュンヒルド,紫津乃[炎天],アレフ,ジタン,エリ＝アノン,大角のビランディ,白幽姫,ニュクス[蒼炎],ギュスターヴ,ジニー,エルフリーデ,エーリカ,ティーダ,朱天 暁,鵤 美鈴,シーリーン,小夜守のシャオレイ,リアム[夜魔],ヴァニラ".split(","));
+const NODECAY = new Set(["サクヤ", "エリ＝アノン"]);
+const DECAY = [1, 0.85, 0.70, 0.55, 0.45];
+function aoeMult(c, P) { // P[k-1]＝k部隊に当たる確率
+  if (!FAN.has(c.n)) return 1;
+  return P.reduce((s, p, i) => s + p * (i + 1) * (NODECAY.has(c.n) ? 1 : DECAY[i]), 0);
+}
+const HEAL_EXTRA = { "ヴァニラ": 0.105 }; // 一覧に入っていない回復（ケアル）
+function healOf(cs) { return cs.reduce((s, c) => s + c.tr.filter(([v, t]) => t === "回復").reduce((a, [v]) => a + v, 0) + (HEAL_EXTRA[c.n] || 0), 0); }
+// 行軍速度：トリガー1が兵種の攻撃+X%なら行軍+X/3%、全兵種+70%なら+31.5%
+function speedOf(cs, T) { return cs.reduce((s, c) => s + c.tr.filter(([v, t]) => t === T).reduce((a, [v]) => a + v / 3, 0) + c.tr.filter(([v, t]) => t === "全兵種").reduce((a, [v]) => a + v * 0.45, 0), 0); }
+function runArena(L, S, R, p) {
+  const tg = { kind: "long", attr: "", type: null, multiP: p.multiP };
+  const atk = atkFor(L, S, tg, p.base, R);
+  const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0) + (R ? SHORTEN[R.n] || 0 : 0);
+  const bonus = formBonus(L, S, R);
+  const slots = [{ type: p.main, tier: 3, n: p.total || 110000 }];
+  const P = p.P;
+  const r = sim(L, S, slots, tg, { atk, bonus, ourDef: 0, N: p.N, CH: p.CH, short, third: R, aoe: c => aoeMult(c, P), enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T });
+  const heal = healOf([L, S, R].filter(Boolean));
+  const tough = (1 + heal) / r.redAvg;
+  return Object.assign(r, { atk, bonus, heal, tough, score: r.total * tough, speed: speedOf([L, S, R].filter(Boolean), p.main) });
+}
+if (typeof module !== "undefined") module.exports = { parseChars, sim, runVault, runMonster, runLong, runBoss, runArena, formBonus, aoeMult, atkFor, TYPES, VAULT, BEAT, TBEAT };
 
 const CHARS_TXT = `ノア＝レス|雷|統率|1400|21|3|与ダメ+21|70|全兵種|84|対施設|84|集結部隊時
 リアム|雷|弓|1400|21|3|与ダメ+21|84|弓|84|チャージ|56|対歩
@@ -604,8 +711,10 @@ function persistInputs() {
 }
 function enemy() {
   const k = $("g_kind").value, attr = $("g_attr").value, type = $("g_type").value, sp = $("g_sp").value;
-  const mon = k.startsWith("魔獣") || k === "キザハシ";
-  return { k, attr, type, sp: k === "キザハシ" ? "キザハシ" : sp, mon, vault: k === "宝庫", rally: k.includes("集結"), facility: k.startsWith("施設攻撃"), field: k === "対人（野戦）" };
+  const boss = k === "領域改稿" || k === "レイド";
+  const mon = k.startsWith("魔獣") || k === "キザハシ" || boss;
+  if (k === "アリーナ") return { k, attr: "", type: "", sp: "", mon: false, boss: false, arena: true, vault: false, rally: false, facility: false, field: false };
+  return { k, attr, type, sp: k === "キザハシ" ? "キザハシ" : sp, mon, boss, vault: k === "宝庫", rally: k.includes("集結") || (boss && $("r_brally").checked), facility: k.startsWith("施設攻撃"), field: k === "対人（野戦）" };
 }
 function enemyTarget(E) {
   if (E.vault) return { kind: "vault", attr: E.attr, type: E.type };
@@ -616,22 +725,27 @@ function enemyTarget(E) {
 function enemyUI() {
   const E = enemy();
   $("g_sp_l").classList.toggle("hidden", !E.mon || E.k === "キザハシ");
-  $("g_type_l").classList.toggle("hidden", E.mon);
+  $("g_type_l").classList.toggle("hidden", E.mon || !!E.arena);
+  $("g_attr").closest("label").classList.toggle("hidden", !!E.arena);
   const notes = {
     "宝庫": "宝庫シミュ・編成ランキング（治療費順）・装備の最適化で使います。",
+    "アリーナ": "精鋭（T3）110,000の5部隊、3人編成（3rdの編成ボーナスは2ndの半分、トリガーは全部入る）。相手の属性・兵種はばらばらなので相性なし。編成ランキング（3人編成と、おすすめの5部隊）で使います。",
+    "領域改稿": "魔獣と同じ相性（属性有利で×1.23、対魔獣・対種族が乗る）で、2部隊出す前提（キャラがかぶらない組み合わせ）。「2部隊以上」は敵2部隊以上と同時に戦うときの効果なので発動しません。HPがわからないので、編成ランキング（2部隊の与ダメ合計順）と装備の最適化で使います。",
+    "レイド": "今は領域改稿と同じ扱いです（アクティブスキルはまだ入っていません）。編成ランキング（2部隊の与ダメ合計順）と装備の最適化で使います。",
     "キザハシ": "キザハシは兵種が統率なので兵種の有利・不利はなし。属性は対人と同じ計算（有利で+11.4%）と仮定しています（未検証）。魔獣シミュで計算でき、HP・防御は手入力してください。",
   };
   $("g_note").textContent = notes[E.k] || (E.mon ? "魔獣シミュ・編成ランキング（早く倒せる順）・装備の最適化で使います。" : "編成ランキング（長期戦・与ダメ順）と装備の最適化で使います。敵のHPや攻撃はわからないので、与ダメの比較だけです。");
 }
 $("g_kind").addEventListener("change", () => { enemyUI(); rankModeUI(); });
+["g_attr", "g_sp", "g_type"].forEach(id => $(id).addEventListener("change", rankModeUI));
 function badgeAdd() {
   const ln = $("h_L").value, sn = $("h_S").value, k = $("h_tg").value;
   let tg = { kind: "long", attr: "", type: null };
-  if (k === "same") tg = enemyTarget(enemy());
+  if (k === "same") tg = Object.assign({}, enemyTarget(enemy()), { multi: false }); // 「2部隊以上」は戦闘中だけ発動でバッジには入らない
   const none = { n: "", at: "", tp: "", tr: [] };
-  const L = CH[ln] || none, S = CH[sn] || none;
-  if (!CH[ln] && !CH[sn]) return { 歩: 0, 弓: 0, 騎: 0 };
-  return atkFor(L, S, tg, { 歩: 0, 弓: 0, 騎: 0 });
+  const L = CH[ln] || none, S = CH[sn] || none, R = CH[$("h_R").value] || null;
+  if (!CH[ln] && !CH[sn] && !R) return { 歩: 0, 弓: 0, 騎: 0 };
+  return atkFor(L, S, Object.assign(tg, { multiP: 0 }), { 歩: 0, 弓: 0, 騎: 0 }, R);
 }
 function common() {
   const v = id => parseFloat($(id).value);
@@ -693,7 +807,7 @@ function makeCombo(sel) {
 }
 
 // ---------- タブ ----------
-const TABS = ["vault", "monster", "rank", "equip", "about"];
+const TABS = ["vault", "monster", "rank", "tier", "equip", "about"];
 function showTab(t) {
   if (!TABS.includes(t)) t = "vault";
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
@@ -748,7 +862,7 @@ function renderVault() {
     ["負傷の合計", fmt(a.injSum), fmt(b.injSum)], ["重傷（主力）", fmt(a.inj[0] * 0.196), fmt(mainHeavy)], ["重傷（安い枠3つ）", "0", fmt(slotHeavy)],
     ["治療費：食料", fmt(a.res.食料), fmt(b.res.食料)], ["治療費：木材", fmt(a.res.木材), fmt(b.res.木材)], ["治療費：石材", fmt(a.res.石材), fmt(b.res.石材)], ["治療費：赤い資源", fmt(a.res.赤), fmt(b.res.赤)],
     ["治療費の合計", fmt(a.cost), fmt(b.cost)]];
-  $("v_table").innerHTML = `<tr><th></th><th class="n">主力だけ</th><th class="n">安い枠あり</th></tr>` + rowsT.map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td></tr>`).join("");
+  $("v_table").innerHTML = `<tr><th></th><th class="n hl">安い枠あり</th><th class="n">主力だけ</th></tr>` + rowsT.map((r, i) => `<tr${i === rowsT.length - 1 ? ' class="tot"' : ""}><td>${r[0]}</td><td class="n hl">${r[2]}</td><td class="n">${r[1]}</td></tr>`).join("");
   chart($("v_chart"), b.log.map(d => ({ t: d.t, bar: d.loss, line: d.hp, hi: d.t >= 12 && (d.t - 12) % 10 === 0 })), { label: "宝庫HPと負傷", barName: "こっちの負傷（オレンジは宝庫のチャージ）", lineName: "宝庫の残りHP" });
 }
 
@@ -788,12 +902,46 @@ $("r_none").addEventListener("click", () => { store.set("chars", []); renderChar
 function rankModeUI() {
   const E = enemy(), m = rankMode();
   const show = (id, on) => $(id).classList.toggle("hidden", !on);
-  show("r_lv_l", m !== "long"); show("r_T_l", m === "long"); show("r_ctr_l", m === "long");
-  $("r_enote").textContent = m === "vault" ? `宝庫（${E.attr}・${E.type}兵）で、治療費が安い順に並べます。` : m === "monster" ? `${E.k}（${E.attr}・${E.sp}）で、早く倒せる順に並べます。` : `${E.k}（${E.attr}・${E.type}兵）で、決めたターン数の与ダメが多い順に並べます。`;
+  show("r_lv_l", m === "vault" || m === "monster"); show("r_T_l", m === "long" || m === "boss"); show("r_ctr_l", m === "long" || m === "boss"); show("r_boss", m === "boss"); show("r_arena", m === "arena");
+  $("r_enote").textContent = m === "arena" ? "アリーナ（T3 110,000）で、3人編成を「与ダメ×耐久」の多い順に並べます。下に、キャラがかぶらないおすすめの5部隊も出します。" : m === "boss" ? `${E.k}（${E.attr}・${E.sp}）で、キャラがかぶらない2部隊の組み合わせを、決めたターン数の与ダメ合計が多い順に並べます。` : m === "vault" ? `宝庫（${E.attr}・${E.type}兵）で、治療費が安い順に並べます。` : m === "monster" ? `${E.k}（${E.attr}・${E.sp}）で、早く倒せる順に並べます。` : `${E.k}（${E.attr}・${E.type}兵）で、決めたターン数の与ダメが多い順に並べます。`;
 }
-function rankMode() { const E = enemy(); return E.vault ? "vault" : E.mon ? "monster" : "long"; }
+function rankMode() { const E = enemy(); return E.arena ? "arena" : E.vault ? "vault" : E.boss ? "boss" : E.mon ? "monster" : "long"; }
 $("r_go").addEventListener("click", () => { $("r_status").textContent = "計算中…"; setTimeout(renderRank, 20); });
+function renderArenaRank() {
+  const c = common(), lt = $("r_ltype").value, top = +$("r_n").value, T = +$("a_T").value || 40;
+  let P = $("a_p").value.split(/[,、\s]+/).map(Number).filter(x => isFinite(x)); while (P.length < 5) P.push(0);
+  const ps = P.slice(0, 5).reduce((a, b) => a + b, 0) || 1; P = P.slice(0, 5).map(x => x / ps);
+  const multiP = 1 - P[0]; // 敵2部隊以上と戦う確率＝範囲が2部隊以上に当たる確率
+  const own = ownedChars().filter(n => CH[n]);
+  const t0 = performance.now();
+  const opt = mt => ({ base: c.base, main: mt, N: c.N, CH: c.CH, T, P, multiP });
+  const pairs = [];
+  for (const ln of own) { const L = CH[ln]; if (!L.pw) continue;
+    for (const mt of (L.tp === "統率" ? TYPES : [L.tp]).filter(x => !lt || x === lt))
+      for (const sn of own) if (sn !== ln) pairs.push({ ln, sn, mt, s: runArena(L, CH[sn], null, opt(mt)).score });
+  }
+  pairs.sort((a, b) => b.s - a.s);
+  const res = [];
+  const seenL = {}; for (const p of pairs) { // 上位のペア＋各リーダーの上位3ペアに3rdを足す
+    seenL[p.ln] = (seenL[p.ln] || 0) + 1; if (pairs.indexOf(p) >= 120 && seenL[p.ln] > 3) continue;
+    for (const rn of own) {
+    if (rn === p.ln || rn === p.sn) continue;
+    const r = runArena(CH[p.ln], CH[p.sn], CH[rn], opt(p.mt));
+    res.push({ L: p.ln, S: p.sn, R: rn, mt: p.mt, score: r.score, dmg: r.total, tough: r.tough, speed: r.speed, bonus: r.bonus, ch: (r.parts.chL + r.parts.chS + r.parts.chR) / r.total });
+  } }
+  res.sort((a, b) => b.score - a.score);
+  if (!res.length) { $("r_table").innerHTML = `<tr><td>使うキャラが3人以上必要です。</td></tr>`; return; }
+  const b = res[0];
+  const used = new Set(), team = [];
+  for (const r of res) { if (team.length >= 5) break; if ([r.L, r.S, r.R].some(n => used.has(n))) continue; team.push(r); [r.L, r.S, r.R].forEach(n => used.add(n)); }
+  const row = (r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}・${r.R}</td><td>${r.mt}兵</td><td class="n">${fmt(r.score / b.score, 3)}</td><td class="n">${fmt(r.dmg / b.dmg, 3)}</td><td class="n">${fmt(r.tough, 2)}</td><td class="n">+${fmt(r.speed * 100)}%</td><td class="n">+${fmt((r.bonus - 1) * 100, 1)}%</td><td class="n">${fmt(r.ch * 100)}%</td></tr>`;
+  const head = `<tr><th>順位</th><th>リーダー・2nd・3rd</th><th>主力</th><th class="n">総合（1位比）</th><th class="n">与ダメ</th><th class="n">耐久</th><th class="n">行軍速度</th><th class="n">編成ボーナス</th><th class="n">チャージの割合</th></tr>`;
+  $("r_table").innerHTML = `<tr><th colspan="9">おすすめの5部隊（キャラがかぶらないように上から選ぶ）</th></tr>` + head + team.map(row).join("") +
+    `<tr><th colspan="9">3人編成のランキング</th></tr>` + head + res.slice(0, top).map(row).join("");
+  $("r_status").textContent = `${fmt(pairs.length + res.length)}通りを計算（${fmt((performance.now() - t0) / 1000, 1)}秒）。範囲チャージの倍率：減り方あり×${fmt(P.reduce((s, p, i) => s + p * (i + 1) * [1, .85, .7, .55, .45][i], 0), 2)}、サクヤ・エリ＝アノン×${fmt(P.reduce((s, p, i) => s + p * (i + 1), 0), 2)}`;
+}
 function renderRank() {
+  if (rankMode() === "arena") return renderArenaRank();
   const c = common(), E = enemy(), m = rankMode(), lt = $("r_ltype").value, top = +$("r_n").value;
   const own = ownedChars().filter(n => CH[n]);
   const res = [];
@@ -807,6 +955,10 @@ function renderRank() {
         if (m === "vault") {
           const r = runVault(L, S, { lv: +$("r_lv").value, attr: E.attr, type: E.type, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
           const b = r.withSlot; res.push({ L: ln, S: sn, mt, key: b.cost, turns: b.turns, win: b.win, inj: b.injSum, cost: b.cost, slot: b.slot });
+        } else if (m === "boss") {
+          const bb = (parseFloat($("r_bbase").value) || 0) / 100, btot = parseFloat($("r_btot").value) || c.total;
+          const r = runBoss(L, S, { attr: E.attr, species: E.sp, rally: E.rally, T: +$("r_T").value, counter: $("r_ctr").checked, noDebuff: !$("r_bdeb").checked, main: mt, total: btot, base: { 歩: bb, 弓: bb, 騎: bb }, bonus: c.bonus, N: c.N, CH: c.CH });
+          const tot = r.total; res.push({ L: ln, S: sn, mt, key: -tot, tot, sh: [r.parts.nrm / tot, r.parts.ctr / tot, (r.parts.chL + r.parts.chS) / tot] });
         } else if (m === "monster") {
           const r = runMonster(L, S, { lv: +$("r_lv").value, attr: E.attr, species: E.sp, rally: E.rally, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH });
           res.push({ L: ln, S: sn, mt, key: (r.win ? r.turns : 999) - r.total / 1e9, turns: r.turns, win: r.win, inj: r.injSum, avg: r.total / r.turns });
@@ -820,7 +972,23 @@ function renderRank() {
   res.sort((a, b) => a.key - b.key);
   const best = res[0];
   let h;
-  if (m === "vault") {
+  if (m === "boss") {
+    // キャラがかぶらない2部隊の組み合わせ（上位から探す）
+    const K = Math.min(res.length, 400), pairs = [];
+    for (let i = 0; i < K; i++) for (let j = i + 1; j < K; j++) {
+      const a = res[i], b = res[j];
+      if (a.L === b.L || a.L === b.S || a.S === b.L || a.S === b.S) continue;
+      pairs.push({ a, b, tot: a.tot + b.tot });
+    }
+    pairs.sort((x, y) => y.tot - x.tot);
+    const pb = pairs[0];
+    const cell = r => `${r.L}・${r.S}<span class="note">（${r.mt}兵／単独${fmt(r.tot / best.tot, 3)}）</span>`;
+    h = `<tr><th>順位</th><th>1部隊目</th><th>2部隊目</th><th class="n">1位比</th></tr>` +
+      pairs.slice(0, top).map((p, i) => `<tr><td>${i + 1}</td><td>${cell(p.a)}</td><td>${cell(p.b)}</td><td class="n">${fmt(p.tot / pb.tot, 3)}</td></tr>`).join("") +
+      `<tr><th colspan="4">参考：1部隊だけのランキング</th></tr><tr><th>順位</th><th>リーダー・サブ</th><th class="n">1位比</th><th class="n">通常／反撃／チャージ</th></tr>` +
+      res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}（${r.mt}兵）</td><td class="n">${fmt(r.tot / best.tot, 3)}</td><td class="n">${fmt(r.sh[0] * 100)}／${fmt(r.sh[1] * 100)}／${fmt(r.sh[2] * 100)}%</td></tr>`).join("");
+    if (!pairs.length) h = `<tr><td>キャラがかぶらない2部隊を作るには、使うキャラが4人以上必要です。</td></tr>`;
+  } else if (m === "vault") {
     h = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">撃破（報告）</th><th class="n">安い枠</th><th class="n">負傷</th><th class="n">治療費</th><th class="n">1位比</th></tr>` +
       res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${r.win ? `${r.turns}（${r.turns + 1}）` : "×"}</td><td class="n">${fmt(r.slot)}</td><td class="n">${fmt(r.inj)}</td><td class="n">${fmt(r.cost / 10000, 1)}万</td><td class="n">${fmt(r.cost / best.cost * 100)}%</td></tr>`).join("");
   } else if (m === "monster") {
@@ -861,7 +1029,7 @@ function weightFn() {
   $("e_sg").value = Math.round(shg * 100);
   const atk = c.base[tp] + 3.5; // キャラのトリガー分をおおよそ足す
   const gen = 0.75 * (shn / (1 + atk + c.N) + shc / (1 + atk) + shg / (1 + atk + c.CH));
-  const mon = en.startsWith("魔獣"), ral = en.includes("集結"), fac = en.startsWith("施設攻撃");
+  const mon = E.mon && en !== "キザハシ", ral = E.rally, fac = en.startsWith("施設攻撃");
   const useDef = $("e_def").checked;
   return nm => {
     const isAtk = nm === "攻撃力" || nm === tp + "兵攻撃力" || nm === el + "属性リーダー攻撃力" ||
@@ -918,7 +1086,7 @@ renderEqList();
 enemyUI();
 rankModeUI();
 document.querySelectorAll(".wrap input, .wrap select").forEach(el => {
-  if (el.closest("#e_list") || el.closest("#r_chars") || el.closest("#tab-rank") || el.id === "e_filter") return;
+  if (el.closest("#e_list") || el.closest("#r_chars") || el.closest("#tab-rank") || el.closest("#tab-tier") || el.id === "e_filter") return;
   el.addEventListener("change", renderAll);
 });
 ["e_main", "e_attr", "e_sn", "e_sc", "e_def", "e_own"].forEach(id => $(id).addEventListener("input", renderEquip));
@@ -939,6 +1107,90 @@ $("h_S").addEventListener("change", () => syncFormation("S"));
 showTab(location.hash.slice(1));
 renderAll();
 renderRank();
+$("r_brally").addEventListener("change", renderAll);
+
+// ---------- ティア表（宝庫） ----------
+// ティアは点数の「すき間」で5つに分ける（自然な区切り＝Jenks法）。上から S/A/B/C/D が必ずそろう
+function jenks(vals, k) { // vals は降順。各グループの先頭indexを返す
+  const n = vals.length; k = Math.min(k, n);
+  const pre = [0], pre2 = [0];
+  vals.forEach(v => { pre.push(pre[pre.length - 1] + v); pre2.push(pre2[pre2.length - 1] + v * v); });
+  const cost = (i, j) => { const m = j - i, s1 = pre[j] - pre[i]; return pre2[j] - pre2[i] - s1 * s1 / m; }; // [i,j)
+  const D = [...Array(k + 1)].map(() => Array(n + 1).fill(Infinity)), B = [...Array(k + 1)].map(() => Array(n + 1).fill(0));
+  D[0][0] = 0;
+  for (let g = 1; g <= k; g++) for (let j = g; j <= n; j++) for (let i = g - 1; i < j; i++) {
+    const c = D[g - 1][i] + cost(i, j); if (c < D[g][j]) { D[g][j] = c; B[g][j] = i; }
+  }
+  const starts = []; let j = n;
+  for (let g = k; g >= 1; g--) { const i = B[g][j]; starts.unshift(i); j = i; }
+  return starts;
+}
+function tierLabels(vals) { // 降順の点数 → ティア名の配列
+  const st = jenks(vals, 5), names = "SABCD", out = [];
+  vals.forEach((v, i) => { let g = 0; while (g + 1 < st.length && i >= st[g + 1]) g++; out.push(names[g]); });
+  return out;
+}
+const pillT = t => `<span class="pill tier${t}">${t}</span>`;
+$("t_go").addEventListener("click", () => buildTier());
+function buildTier() {
+  const c = common(), lv = +$("t_lv").value, lt = $("t_ltype").value;
+  const own = ownedChars().filter(n => CH[n]);
+  const VARS = []; ATTRS.forEach(a => TYPES.forEach(T => VARS.push([a, T])));
+  const pairs = {}, lead = {}, sub = {};
+  const t0 = performance.now();
+  let vi = 0;
+  $("t_go").disabled = true;
+  const step = () => {
+    const [attr, type] = VARS[vi];
+    const res = [];
+    for (const ln of own) {
+      const L = CH[ln]; if (!L.pw) continue;
+      const mains = (L.tp === "統率" ? TYPES : [L.tp]).filter(x => !lt || x === lt);
+      for (const sn of own) {
+        if (sn === ln) continue;
+        for (const mt of mains) {
+          const r = runVault(L, CH[sn], { lv, attr, type, main: mt, total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH }).withSlot;
+          res.push({ ln, sn, mt, cost: r.win ? r.cost : Infinity });
+        }
+      }
+    }
+    const best = Math.min(...res.map(r => r.cost));
+    const vname = attr + type;
+    const bestL = {}, bestS = {};
+    for (const r of res) {
+      const sc = isFinite(r.cost) ? best / r.cost : 0, k = r.ln + "|" + r.sn + "|" + r.mt;
+      const p = pairs[k] || (pairs[k] = { ln: r.ln, sn: r.sn, mt: r.mt, s: [], top: [], weak: [] });
+      p.s.push(sc); if (sc >= 0.9999) p.top.push(vname); if (sc < 0.8) p.weak.push(vname);
+      bestL[r.ln] = Math.max(bestL[r.ln] || 0, sc); bestS[r.sn] = Math.max(bestS[r.sn] || 0, sc);
+    }
+    for (const [m, b] of [[lead, bestL], [sub, bestS]]) for (const n in b) {
+      const o = m[n] || (m[n] = { n, s: [], top: [], weak: [] });
+      o.s.push(b[n]); if (b[n] >= 0.9999) o.top.push(vname); if (b[n] < 0.8) o.weak.push(vname);
+    }
+    vi++;
+    $("t_status").textContent = `計算中… ${vi}/${VARS.length}（${vname}まで）`;
+    if (vi < VARS.length) setTimeout(step, 0); else finish();
+  };
+  const avg = a => a.reduce((x, y) => x + y, 0) / VARS.length; // 出せない宝庫は0点として平均
+  const finish = () => {
+    const top = +$("r_n").value || 20;
+    const solo = (m, id, role) => {
+      const arr = Object.values(m).map(o => Object.assign(o, { a: avg(o.s) })).sort((x, y) => y.a - x.a);
+      const b = arr[0] ? arr[0].a : 1, tl = tierLabels(arr.map(o => o.a));
+      $(id).innerHTML = `<tr><th>ティア</th><th>キャラ</th><th class="n">点数</th><th class="n">1位比</th><th class="n">1位の数</th><th>苦手な宝庫</th></tr>` +
+        arr.map((o, i) => `<tr><td>${pillT(tl[i])}</td><td>${o.n}<span class="note">（${CH[o.n].at}・${CH[o.n].tp}）</span></td><td class="n">${fmt(o.a, 3)}</td><td class="n">${fmt(o.a / b, 3)}</td><td class="n">${o.top.length}</td><td class="note">${o.weak.length ? (o.weak.length > 6 ? o.weak.length + "種類" : o.weak.join("、")) : "—"}</td></tr>`).join("");
+    };
+    solo(lead, "t_lead"); solo(sub, "t_sub");
+    const pa = Object.values(pairs).map(p => Object.assign(p, { a: avg(p.s) })).sort((x, y) => y.a - x.a);
+    const pb = pa[0] ? pa[0].a : 1, shown = pa.slice(0, Math.max(top, 30)), tp = tierLabels(pa.slice(0, 300).map(p => p.a));
+    $("t_pair").innerHTML = `<tr><th>ティア</th><th>リーダー・サブ</th><th>主力</th><th class="n">点数</th><th class="n">1位比</th><th>1位の宝庫</th></tr>` +
+      shown.map((p, i) => `<tr><td>${pillT(tp[i])}</td><td>${p.ln}・${p.sn}</td><td>${p.mt}兵</td><td class="n">${fmt(p.a, 3)}</td><td class="n">${fmt(p.a / pb, 3)}</td><td class="note">${p.top.join("、") || "—"}</td></tr>`).join("");
+    $("t_status").textContent = `${VARS.length}種類の宝庫 × ${fmt(Object.keys(pairs).length)}ペアを計算（${fmt((performance.now() - t0) / 1000, 1)}秒）`;
+    $("t_go").disabled = false;
+  };
+  if (own.length < 2) { $("t_status").textContent = "使うキャラが2人以上必要です。"; $("t_go").disabled = false; return; }
+  setTimeout(step, 20);
+}
 
 </script>
 </body>
