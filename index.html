@@ -264,23 +264,33 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>ティア表の条件</h2>
     <div class="form">
-      <label for="t_mode">コンテンツ<select id="t_mode"><option value="vault">宝庫（21種類すべて）</option></select></label>
-      <label for="t_lv">宝庫のLv<select id="t_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="8">Lv8</option><option value="11">秘宝庫</option></select></label>
+      <label for="t_mode">コンテンツ<select id="t_mode"><option value="vault">宝庫</option><option value="abyss">奈落（施設集結）</option></select></label>
+      <label for="t_lv" id="t_lv_l">宝庫のLv<select id="t_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="8">Lv8</option><option value="11">秘宝庫</option></select></label>
+      <label for="t_zsup" id="t_zsup_l" class="hidden">サポートの編成ボーナス%<input id="t_zsup" type="number" value="12" step="0.1"></label>
+      <label for="t_deb" id="t_deb_l" class="hidden">Sで敵被ダメアップ<select id="t_deb"><option value="0">数えない（競うので）</option><option value="1">数える</option></select></label>
       <label for="t_ltype">主力の兵種<select id="t_ltype"><option value="">すべて</option><option>歩</option><option>弓</option><option>騎</option></select></label>
     </div>
     <div class="row" style="margin-top:10px"><button class="btn" id="t_go">ティア表を作る</button><span class="note" id="t_status"></span></div>
-    <p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。7属性×3兵種＝21種類の宝庫それぞれで全ペアの治療費を出し、その宝庫の最安を1として「最安÷治療費」で点数にします。</p>
+    <div id="t_note_vault"><p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。7属性×3兵種＝21種類の宝庫それぞれで全ペアの治療費を出し、その宝庫の最安を1として「最安÷治療費」で点数にします。</p>
     <ul class="note">
       <li><b>ペア</b>：21種類の宝庫での点数の平均。1位比の列は、点数が一番高いペアを1としたときの比です。</li>
       <li><b>ソロ</b>：宝庫ごとに「そのキャラが入った一番いいペア」の点数をとり、21種類で平均。リーダーとサブは別々に評価します。</li>
       <li><b>1位の数</b>：そのペア・キャラで最安になる宝庫の数。<b>苦手</b>：点数が0.8未満の宝庫。</li>
       <li>ティアは点数の「すき間」で5つに分けます（近い点数どうしを同じグループにする区切り方）。S〜Dが必ずそろいます。ペアは上位300ペアの中で分けます。</li>
-    </ul>
+    </ul></div>
+    <div id="t_note_abyss" class="hidden"><p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。奈落の6施設（S・F・A・D・P左・P右）それぞれで、3人編成（リーダー・2nd・3rd）の与ダメを100ターン分出し、その施設の最高を1として「与ダメ÷最高」で点数にします。</p>
+    <ul class="note">
+      <li><b>編成</b>：6施設の点数の平均。各施設の上位から候補を集めて、全施設で計算し直しています。</li>
+      <li><b>ソロ</b>：施設ごとに「そのキャラがその役で入った一番いい編成」の点数をとり、6施設で平均。リーダー・2nd・3rdを別々に評価します。</li>
+      <li>敵被ダメアップ（デバフ）は集結のみんなのダメージを上げるので数えます。Sだけは他の人と競うので、上の設定で切り替えられます。</li>
+      <li><b>1位の数</b>：最高点になる施設の数。<b>苦手</b>：点数が0.8未満の施設。ティアの分け方は宝庫と同じです。</li>
+    </ul></div>
   </div>
   <div class="panel">
     <h2>ソロ（リーダー）</h2><div class="scroll"><table id="t_lead"></table></div>
-    <h2>ソロ（サブ）</h2><div class="scroll"><table id="t_sub"></table></div>
-    <h2>ペア</h2><div class="scroll"><table id="t_pair"></table></div>
+    <h2 id="t_sub_h">ソロ（サブ）</h2><div class="scroll"><table id="t_sub"></table></div>
+    <div id="t_third_w" class="hidden"><h2>ソロ（3rd）</h2><div class="scroll"><table id="t_third"></table></div></div>
+    <h2 id="t_pair_h">ペア</h2><div class="scroll"><table id="t_pair"></table></div>
   </div>
 </section>
 
@@ -1411,7 +1421,69 @@ function tierLabels(vals) { // 降順の点数 → ティア名の配列
 }
 const pillT = t => `<span class="pill tier${t}">${t}</span>`;
 $("t_go").addEventListener("click", () => buildTier());
+function tierModeUI() {
+  const ab = $("t_mode").value === "abyss", sh = (id, on) => $(id).classList.toggle("hidden", !on);
+  sh("t_lv_l", !ab); sh("t_zsup_l", ab); sh("t_deb_l", ab); sh("t_note_vault", !ab); sh("t_note_abyss", ab); sh("t_third_w", ab);
+  $("t_sub_h").textContent = ab ? "ソロ（2nd）" : "ソロ（サブ）"; $("t_pair_h").textContent = ab ? "編成（3人）" : "ペア";
+  ["t_lead", "t_sub", "t_third", "t_pair"].forEach(id => $(id).innerHTML = ""); $("t_status").textContent = "";
+}
+$("t_mode").addEventListener("change", tierModeUI);
+const tierRow = (arr, unit) => { const b = arr[0] ? arr[0].a : 1, tl = tierLabels(arr.map(o => o.a));
+  return `<tr><th>ティア</th><th>キャラ</th><th class="n">点数</th><th class="n">1位比</th><th class="n">1位の数</th><th>苦手な${unit}</th></tr>` +
+    arr.map((o, i) => `<tr><td>${pillT(tl[i])}</td><td>${o.n}<span class="note">（${CH[o.n].at}・${CH[o.n].tp}）</span></td><td class="n">${fmt(o.a, 3)}</td><td class="n">${fmt(o.a / b, 3)}</td><td class="n">${o.top.length}</td><td class="note">${o.weak.length ? (o.weak.length > 6 ? o.weak.length + "種類" : o.weak.join("、")) : "—"}</td></tr>`).join(""); };
+// ---------- ティア表（奈落・施設集結） ----------
+const FACS = [["S", "歩", "雷"], ["F", "騎", "光"], ["A", "弓", "風"], ["D", "弓", "土"], ["P左", "歩", "水"], ["P右", "歩", "火"]];
+function buildTierAbyss() {
+  const c = common(), lt = $("t_ltype").value, sup = (parseFloat($("t_zsup").value) || 0) / 100, debS = $("t_deb").value === "1";
+  const own = ownedChars().filter(n => CH[n]);
+  if (own.length < 3) { $("t_status").textContent = "使うキャラが3人以上必要です。"; return; }
+  const run = (f, L, S, R, mt) => runLong(L, S, { attr: f[2], type: f[1], T: 100, rally: true, facility: true, field: false, multiP: 0, counter: true, main: mt, total: c.total, base: c.base, bonus: formBonus(L, S, R, sup), N: c.N, CH: c.CH, third: R, noDebuff: f[0] === "S" && !debS }).total;
+  const roles = [{}, {}, {}], best = [], cand = new Map();
+  const t0 = performance.now(); let fi = 0, nrun = 0;
+  $("t_go").disabled = true;
+  const step = () => {
+    const f = FACS[fi], pairs = [];
+    for (const ln of own) { const L = CH[ln]; if (!L.pw) continue;
+      for (const mt of (L.tp === "統率" ? TYPES : [L.tp]).filter(x => !lt || x === lt))
+        for (const sn of own) if (sn !== ln) { pairs.push({ ln, sn, mt, s: run(f, L, CH[sn], null, mt) }); nrun++; }
+    }
+    pairs.sort((a, b) => b.s - a.s);
+    const res = [], seenL = {};
+    pairs.forEach((p, i) => {
+      seenL[p.ln] = (seenL[p.ln] || 0) + 1; if (i >= 120 && seenL[p.ln] > 3) return;
+      for (const rn of own) { if (rn === p.ln || rn === p.sn) continue;
+        res.push({ ln: p.ln, sn: p.sn, rn, mt: p.mt, s: run(f, CH[p.ln], CH[p.sn], CH[rn], p.mt) }); nrun++; }
+    });
+    res.sort((a, b) => b.s - a.s);
+    const bs = res.length ? res[0].s : 1; best.push(bs);
+    const bR = [{}, {}, {}];
+    for (const r of res) { const sc = r.s / bs; [r.ln, r.sn, r.rn].forEach((n, k) => { bR[k][n] = Math.max(bR[k][n] || 0, sc); }); }
+    bR.forEach((b, k) => { for (const n in b) { const o = roles[k][n] || (roles[k][n] = { n, s: [], top: [], weak: [] });
+      o.s.push(b[n]); if (b[n] >= 0.9999) o.top.push(f[0]); if (b[n] < 0.8) o.weak.push(f[0]); } });
+    res.slice(0, 80).forEach(r => { const k = r.ln + "|" + r.sn + "|" + r.rn + "|" + r.mt; if (!cand.has(k)) cand.set(k, r); });
+    fi++;
+    $("t_status").textContent = `計算中… ${fi}/${FACS.length}（${f[0]}まで）`;
+    if (fi < FACS.length) setTimeout(step, 0); else setTimeout(finish, 0);
+  };
+  const avg = a => a.reduce((x, y) => x + y, 0) / FACS.length;
+  const finish = () => {
+    const top = +$("r_n").value || 20;
+    [["t_lead", 0], ["t_sub", 1], ["t_third", 2]].forEach(([id, k]) => {
+      $(id).innerHTML = tierRow(Object.values(roles[k]).map(o => Object.assign(o, { a: avg(o.s) })).sort((x, y) => y.a - x.a), "施設"); });
+    const tri = [...cand.values()].map(r => { const L = CH[r.ln], S = CH[r.sn], R = CH[r.rn];
+      const s = FACS.map((f, i) => Math.min(1, run(f, L, S, R, r.mt) / best[i])); nrun += FACS.length;
+      return { ...r, s, a: avg(s), top: FACS.filter((f, i) => s[i] >= 0.9999).map(f => f[0]), weak: FACS.filter((f, i) => s[i] < 0.8).map(f => f[0]), bonus: formBonus(L, S, R, sup) }; })
+      .sort((x, y) => y.a - x.a);
+    const pb = tri[0] ? tri[0].a : 1, shown = tri.slice(0, Math.max(top, 30)), tp = tierLabels(tri.map(p => p.a));
+    $("t_pair").innerHTML = `<tr><th>ティア</th><th>リーダー・2nd・3rd</th><th>主力</th><th class="n">点数</th><th class="n">1位比</th><th class="n">${FACS.map(f => f[0]).join("／")}</th><th class="n">編成ボーナス</th></tr>` +
+      shown.map((p, i) => `<tr><td>${pillT(tp[i])}</td><td>${p.ln}・${p.sn}・${p.rn}</td><td>${p.mt}兵</td><td class="n">${fmt(p.a, 3)}</td><td class="n">${fmt(p.a / pb, 3)}</td><td class="n">${p.s.map(x => fmt(x, 2)).join("／")}</td><td class="n">+${fmt((p.bonus - 1) * 100, 1)}%</td></tr>`).join("");
+    $("t_status").textContent = `6施設 × ${fmt(nrun)}通りを計算（${fmt((performance.now() - t0) / 1000, 1)}秒）`;
+    $("t_go").disabled = false;
+  };
+  setTimeout(step, 20);
+}
 function buildTier() {
+  if ($("t_mode").value === "abyss") return buildTierAbyss();
   const c = common(), lv = +$("t_lv").value, lt = $("t_ltype").value;
   const own = ownedChars().filter(n => CH[n]);
   const VARS = []; ATTRS.forEach(a => TYPES.forEach(T => VARS.push([a, T])));
@@ -1455,9 +1527,7 @@ function buildTier() {
     const top = +$("r_n").value || 20;
     const solo = (m, id, role) => {
       const arr = Object.values(m).map(o => Object.assign(o, { a: avg(o.s) })).sort((x, y) => y.a - x.a);
-      const b = arr[0] ? arr[0].a : 1, tl = tierLabels(arr.map(o => o.a));
-      $(id).innerHTML = `<tr><th>ティア</th><th>キャラ</th><th class="n">点数</th><th class="n">1位比</th><th class="n">1位の数</th><th>苦手な宝庫</th></tr>` +
-        arr.map((o, i) => `<tr><td>${pillT(tl[i])}</td><td>${o.n}<span class="note">（${CH[o.n].at}・${CH[o.n].tp}）</span></td><td class="n">${fmt(o.a, 3)}</td><td class="n">${fmt(o.a / b, 3)}</td><td class="n">${o.top.length}</td><td class="note">${o.weak.length ? (o.weak.length > 6 ? o.weak.length + "種類" : o.weak.join("、")) : "—"}</td></tr>`).join("");
+      $(id).innerHTML = tierRow(arr, "宝庫");
     };
     solo(lead, "t_lead"); solo(sub, "t_sub");
     const pa = Object.values(pairs).map(p => Object.assign(p, { a: avg(p.s) })).sort((x, y) => y.a - x.a);
@@ -1489,9 +1559,10 @@ function colorNames(root) {
     nd.parentNode.replaceChild(frag, nd);
   }
 }
-["r_table", "t_lead", "t_sub", "t_pair"].forEach(id => { const el = $(id); if (!el) return; colorNames(el);
+["r_table", "t_lead", "t_sub", "t_third", "t_pair"].forEach(id => { const el = $(id); if (!el) return; colorNames(el);
   new MutationObserver(() => colorNames(el)).observe(el, { childList: true, subtree: true }); });
 
 </script>
+<script data-goatcounter="https://evst-tool.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
