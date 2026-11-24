@@ -78,6 +78,8 @@ details summary{cursor:pointer;font-weight:700;font-size:13px}
 .chart text{fill:var(--muted);font-size:11px;font-family:var(--body)}
 .hidden{display:none}
 .src{font-size:12px;color:var(--muted)}
+.grow input{width:64px;padding:4px 6px}.grow td,.grow th{padding:3px 6px}.grow tr.hl td{background:var(--teal-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}.seg button{border:0;background:var(--panel);color:var(--ink);padding:6px 16px;font:inherit;font-weight:700;cursor:pointer}.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .disc{margin:32px 0 16px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.disc h2{font-size:13px;margin:0 0 6px}.disc ul{margin:0;padding-left:1.2em}.disc li{margin:2px 0}
 .src a{color:var(--teal)}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -107,11 +109,13 @@ ul.tight{margin:4px 0;padding-left:20px}
   <p>宝庫・魔獣のシミュ、編成ランキング、装備の最適化。しゃるるが動画で検証した式で計算しています。入力はこのブラウザに保存されます。</p>
 </header>
 
+
 <section class="panel" id="enemy">
   <h2>敵（相手） <span class="pill">全ツール共通</span></h2>
   <div class="form" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
     <label for="g_cat">バトル環境<select id="g_cat"><option value="field">フィールド</option><option value="arena">アリーナ</option><option value="raid">レイド</option><option value="abyss">奈落</option></select></label>
     <label for="g_kind" id="g_kind_l">戦う相手<select id="g_kind"><option>宝庫</option><option>魔獣（ソロ）</option><option>魔獣（集結）</option><option>領域改稿</option><option>対人（野戦）</option><option>対人（集結）</option><option>資源地</option><option>キザハシ</option><option>施設攻撃</option><option>施設攻撃（集結）</option><option>施設防衛</option><option>アリーナ</option><option>レイド</option><option>奈落（施設集結）</option></select></label>
+    <label for="g_boss" id="g_boss_l" class="hidden">ボス<select id="g_boss"><option value="火|悪魔">マラコーダ（火・悪魔）</option><option value="雷|超獣">チリアット（雷・超獣）</option><option value="闇|堕天">エクリプス（闇・堕天）</option><option value="土|妖魔">マガツ（土・妖魔）</option><option value="水|龍">ヨルムンガンド（水・龍）</option></select></label>
     <label for="g_sp" id="g_sp_l">魔獣の種族<select id="g_sp"><option>悪魔</option><option>超獣</option><option>龍</option><option>妖魔</option><option>堕天</option><option>機甲</option><option>不浄</option><option>精霊</option></select></label>
     <label for="g_type" id="g_type_l">敵の兵種<select id="g_type" class="typesel"></select></label>
     <label for="g_fac" id="g_fac_l" class="hidden">奈落の施設<select id="g_fac"><option value="歩|雷">S（ソドム）：歩兵・雷</option><option value="騎|光">F（要塞）：騎兵・光</option><option value="弓|風">A（攻撃の祭壇）：弓兵・風</option><option value="弓|土">D（防御の祭壇）：弓兵・土</option><option value="歩|水">P（左）：歩兵・水</option><option value="歩|火">P（右）：歩兵・火</option></select></label>
@@ -265,21 +269,30 @@ ul.tight{margin:4px 0;padding-left:20px}
   <div class="panel">
     <h2>ティア表の条件</h2>
     <div class="form">
-      <label for="t_mode">コンテンツ<select id="t_mode"><option value="vault">宝庫</option><option value="abyss">奈落（施設集結）</option></select></label>
+      <label for="t_mode">コンテンツ<select id="t_mode"><option value="vault">宝庫</option><option value="abyss">奈落（施設集結）</option><option value="baika">魔獣狩り（素材倍化）</option></select></label>
+      <label for="t_mlv" id="t_mlv_l" class="hidden">魔獣のLv<input id="t_mlv" type="number" min="1" max="60" step="1" value="30"></label>
+      <label for="t_mrally" id="t_mrally_l" class="hidden">狩り方<select id="t_mrally"><option value="0">ソロ</option><option value="1">集結</option></select></label>
       <label for="t_lv" id="t_lv_l">宝庫のLv<select id="t_lv"><option value="10">Lv10</option><option value="9">Lv9</option><option value="8">Lv8</option><option value="11">秘宝庫</option></select></label>
       <label for="t_zsup" id="t_zsup_l" class="hidden">サポートの編成ボーナス%<input id="t_zsup" type="number" value="12" step="0.1"></label>
       <label for="t_deb" id="t_deb_l" class="hidden">Sで敵被ダメアップ<select id="t_deb"><option value="0">数えない（競うので）</option><option value="1">数える</option></select></label>
       <label for="t_ltype">主力の兵種<select id="t_ltype"><option value="">すべて</option><option>歩</option><option>弓</option><option>騎</option></select></label>
     </div>
     <div class="row" style="margin-top:10px"><button class="btn" id="t_go">ティア表を作る</button><span class="note" id="t_status"></span></div>
-    <div id="t_note_vault"><p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。7属性×3兵種＝21種類の宝庫それぞれで全ペアの治療費を出し、その宝庫の最安を1として「最安÷治療費」で点数にします。</p>
+    <div id="t_note_vault"><p class="note">基本ステータスを使い、所持に関係なく全キャラで計算します。全員完凸。7属性×3兵種＝21種類の宝庫それぞれで全ペアの治療費を出し、その宝庫の最安を1として「最安÷治療費」で点数にします。</p>
     <ul class="note">
       <li><b>ペア</b>：21種類の宝庫での点数の平均。1位比の列は、点数が一番高いペアを1としたときの比です。</li>
       <li><b>ソロ</b>：宝庫ごとに「そのキャラが入った一番いいペア」の点数をとり、21種類で平均。リーダーとサブは別々に評価します。</li>
       <li><b>1位の数</b>：そのペア・キャラで最安になる宝庫の数。<b>苦手</b>：点数が0.8未満の宝庫。</li>
       <li>ティアは点数の「すき間」で5つに分けます（近い点数どうしを同じグループにする区切り方）。S〜Dが必ずそろいます。ペアは上位300ペアの中で分けます。</li>
     </ul></div>
-    <div id="t_note_abyss" class="hidden"><p class="note">基本ステータスと「編成ランキング」の「使うキャラ」を使います。全員完凸。奈落の6施設（S・F・A・D・P左・P右）それぞれで、3人編成（リーダー・2nd・3rd）の与ダメを100ターン分出し、その施設の最高を1として「与ダメ÷最高」で点数にします。</p>
+    <div id="t_note_baika" class="hidden"><p class="note">基本ステータスを使い、所持に関係なく全キャラで計算します。魔獣狩りは相手がいつも1体で、たいていリーダーかサブの最初のチャージで倒しきるので、<b>①素材倍化 ②単体チャージの強さ ③行軍速度</b> の順に重く見ます。魔獣の種族8つ（悪魔・超獣・龍・妖魔・堕天・機甲・不浄・精霊）それぞれで、決めたLvの魔獣を倒せるかを判定して計算します。</p>
+    <ul class="note">
+      <li><b>倍化の点数</b>：平均ドロップ数（1＋キャラの倍化）÷ その種族で倒せるペアの最高。8種族の平均。倒せないと0点。装備の倍化は入れません。</li>
+      <li><b>最初のチャージ</b>：リーダーとサブの1回目のチャージの与ダメ（敵は1体なので範囲の分は数えません）。8種族の平均。ソロの表は、その役のキャラ自身のチャージ。</li>
+      <li><b>総合</b>＝倍化の点数＋0.05×チャージ（いちばん強いものを1とした割合）＋0.02×行軍速度（同じく割合）。倍化の差がいちばん効き、同じくらいならチャージ、その次に行軍速度で差がつきます。ティアは総合で分けます。</li>
+      <li>魔獣の属性はリーダーと同じ（有利も不利もなし）として計算します。<b>1位の数</b>：倍化の点数が最高になる種族の数。<b>苦手</b>：倍化の点数が0.8未満の種族。</li>
+    </ul></div>
+    <div id="t_note_abyss" class="hidden"><p class="note">基本ステータスを使い、所持に関係なく全キャラで計算します。全員完凸。奈落の6施設（S・F・A・D・P左・P右）それぞれで、3人編成（リーダー・2nd・3rd）の与ダメを100ターン分出し、その施設の最高を1として「与ダメ÷最高」で点数にします。</p>
     <ul class="note">
       <li><b>編成</b>：6施設の点数の平均。各施設の上位から候補を集めて、全施設で計算し直しています。</li>
       <li><b>ソロ</b>：施設ごとに「そのキャラがその役で入った一番いい編成」の点数をとり、6施設で平均。リーダー・2nd・3rdを別々に評価します。</li>
@@ -396,7 +409,7 @@ function parseChars(txt) {
     const tr = [];
     for (const i of [7, 9, 11]) {
       const v = parseFloat(f[i]) || 0, t = f[i + 1] || "";
-      if (v && t) tr.push([v / 100, t]);
+      if (v && t) tr.push([v / 100, t, (i - 7) / 2]); // 3つ目＝トリガー番号（0〜2）
     }
     const c = { n, at, tp, pw: +pw, b: (+bv) / 100, bd: +bd, eff, tr };
     const m = eff.match(/^(自被ダメ|敵与ダメ)-([0-9.]+)/);
@@ -552,15 +565,16 @@ function runVault(L, S, p) {
   const E = vaultEnemy(p.lv, p.custom);
   const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
   const o = { atk, bonus: p.bonus, ourDef: p.def, N: p.N, CH: p.CH, short, enemy: E };
-  const main = [{ type: p.main, tier: p.mainTier || 4, n: p.total }];
+  const main = [{ type: p.main, tier: p.mainTier || 4, n: capOf(L, p.total) }];
   const r0 = sim(L, S, main, tg, o);
   const c0 = costOf(main, r0.inj, V_HEAVY);
   let s = p.slot;
   if (!(s > 0)) s = Math.round(r0.injSum * 1.2 / 4 / 1000) * 1000;
   if ((p.mainTier || 4) === (p.cheapTier || 1)) s = 0; // 主力も安い枠と同じ段階なら枠を分ける意味がない
-  s = Math.min(s, Math.floor(p.total / 4 / 1000) * 1000);
+  const tot = capOf(L, p.total);
+  s = Math.min(s, Math.floor(tot / 4 / 1000) * 1000);
   const ct = p.cheapTier || 1;
-  const slots = [{ type: p.main, tier: p.mainTier || 4, n: p.total - 3 * s }].concat(TYPES.map(T => ({ type: T, tier: ct, n: s })));
+  const slots = [{ type: p.main, tier: p.mainTier || 4, n: tot - 3 * s }].concat(TYPES.map(T => ({ type: T, tier: ct, n: s })));
   const r = sim(L, S, slots, tg, o);
   const c = costOf(slots, r.inj, V_HEAVY);
   return { atk, short, mainOnly: Object.assign(r0, c0), withSlot: Object.assign(r, c, { slot: s, slots }) };
@@ -576,8 +590,8 @@ function runMonster(L, S, p) {
   const atk = p.atkFinal || atkFor(L, S, tg, p.base);
   const E = monsterEnemy(p.lv, p.custom);
   const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
-  const slots = [{ type: p.main, tier: p.mainTier || 4, n: p.total }];
-  const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: p.def, N: p.N, CH: p.CH, short, enemy: E, maxT: 120, noDebuff: p.noDebuff });
+  const slots = [{ type: p.main, tier: p.mainTier || 4, n: capOf(L, p.total) }];
+  const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: p.def, N: p.N, CH: p.CH, short, enemy: E, maxT: p.maxT || 120, noDebuff: p.noDebuff });
   return Object.assign(r, { atk, short, enemy: E, heavy: r.injSum * 0.005 });
 }
 // 長期戦（施設・集結など）：被害なしで T ターンの与ダメ合計
@@ -586,7 +600,7 @@ function runLong(L, S, p) {
   const tg = { kind: "long", attr: p.attr, type: p.type, rally: p.rally, facility: p.facility, field: p.field, multiP: p.multiP || 0 };
   const atk = atkFor(L, S, tg, p.base, R);
   const short = Math.min(7, (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0) + (R ? SHORTEN[R.n] || 0 : 0));
-  const slots = [{ type: p.main, tier: 4, n: p.total }];
+  const slots = [{ type: p.main, tier: 4, n: capOf(L, p.total) }];
   const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: 0, N: p.N, CH: p.CH, short, third: R, enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T, noCounter: !p.counter, noDebuff: p.noDebuff });
   if (!p.counter) { r.total -= r.parts.ctr; r.parts.ctr = 0; }
   return Object.assign(r, { atk });
@@ -597,7 +611,7 @@ function runBoss(L, S, p) {
   const tg = { kind: "monster", attr: p.attr, species: p.species, rally: p.rally, multi: !!p.multi };
   const atk = atkFor(L, S, tg, p.base);
   const short = (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0);
-  const slots = [{ type: p.main, tier: 4, n: p.total }];
+  const slots = [{ type: p.main, tier: 4, n: capOf(L, p.total) }];
   const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: 0, N: p.N, CH: p.CH, short, enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T, noDebuff: p.noDebuff });
   if (!p.counter) { r.total -= r.parts.ctr; r.parts.ctr = 0; }
   return Object.assign(r, { atk });
@@ -614,10 +628,12 @@ const WORLD = {};
  ["異世界", "カイネ,2B,フィオ,ビビ,ジタン,ギュスターヴ,ジニー,ティーダ,ユウナ,ライトニング,ヴァニラ,魔人フィーナ,レイン,フィーナ"]]
   .forEach(([w, names]) => names.split(",").forEach(n => WORLD[n] = w));
 // 2ndのボーナス：基本18＋兵種一致10（統率は一致あつかい）＋属性一致5＋出身世界一致1。3rdはその半分
+const lvf = c => c.lv ? 1 - 0.007 * (90 - c.lv) : 1; // キャラLv：90→1、85→0.965、80→0.93
+const capOf = (L, tot) => L && L.cap ? Math.min(tot, L.cap) : tot; // リーダーのLvで載せられる兵数
 function subBonus(L, c) {
   if (!c) return 0;
   const typeOK = c.tp === L.tp || c.tp === "統率" || L.tp === "統率";
-  return (18 + (typeOK ? 10 : 0) + (c.at === L.at ? 5 : 0) + (WORLD[c.n] && WORLD[c.n] === WORLD[L.n] ? 1 : 0)) / 100;
+  return lvf(c) * (18 + (typeOK ? 10 : 0) + (c.at === L.at ? 5 : 0) + (WORLD[c.n] && WORLD[c.n] === WORLD[L.n] ? 1 : 0)) / 100;
 }
 function formBonus(L, S, R, support) { return 1 + subBonus(L, S) + subBonus(L, R) / 2 + (support || 0); }
 // 範囲チャージ：扇形は最大5部隊、減り方 1,0.85,0.70,0.55,0.45（サクヤ・エリ＝アノンは減り方なし）
@@ -665,7 +681,7 @@ function runRaid(L, S, R, p) {
   const atk = atkFor(L, S, tg, p.base, R);
   const short = Math.min(7, (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0) + (R ? SHORTEN[R.n] || 0 : 0));
   const bonus = formBonus(L, S, R, p.sup);
-  const slots = [{ type: p.main, tier: 4, n: p.total }];
+  const slots = [{ type: p.main, tier: 4, n: capOf(L, p.total) }];
   const r = sim(L, S, slots, tg, { atk, bonus, ourDef: 0, N: p.N, CH: p.CH, short, third: R, acts: actsFor([L, S, R], tg, p.actT), AS: p.AS, enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T });
   return Object.assign(r, { bonus });
 }
@@ -859,6 +875,23 @@ const CH = parseChars(CHARS_TXT);
 parseActive(ACTIVE_TXT);
 parseBaika(BAIKA_TXT);
 const NAMES = Object.keys(CH);
+// しゃるるモード（自分用ページだけ）：キャラLv・スキルLvを反映
+const GROW = (() => { try {
+  if (!document.getElementById("mode_bar") || JSON.parse(localStorage.getItem("evst_mode") || '"theory"') !== "me") return null;
+  const v = localStorage.getItem("evst_grow"); return v ? JSON.parse(v) : (window.SHARURU_GROW || {}); } catch (e) { return null; } })();
+const GROW_MAX = { lv: 90, c: 7, a: 5, t: [7, 7, 7] }; // アクティブは最大Lv5
+const growOf = n => Object.assign({}, GROW_MAX, (GROW || {})[n] || {});
+if (GROW) NAMES.forEach(n => {
+  const g = growOf(n), c = CH[n];
+  const tk = i => (i === 1 && g.lv < 20) || (i === 2 && g.lv < 40) ? 0 : (g.t[i] ?? 7) / 7; // トリガー2はLv20、3はLv40で解放
+  c.tr.forEach(x => { x[0] *= tk(x[2]); });
+  const kp = 0.54 + 0.46 * (g.c - 1) / 6, ke = g.c / 7; // チャージ：威力はLv1で約54%から直線、効果はLvに比例
+  c.pw *= kp; if (c.spPow) c.spPow.pw *= kp; c.b *= ke; c.red *= ke;
+  c.lv = g.lv; c.cap = Math.max(160000 + 1000 * g.lv, 190000 + 100 * g.lv);
+  const a = ACTIVE[n]; if (a) { const ka = (g.a + 3) / 8; a.pw *= ka; a.buff *= ka; if (a.sp) a.sp[1] *= ka; } // アクティブ：威力・効果とも Lv1で半分、1Lvごとに+1/8（11-22確認）
+  const b = BAIKA[n]; if (b) { const kb = tk(2); b.all *= kb; if (b.sp) b.sp[1] *= kb; } // 倍化はトリガー3
+  if (SHORTEN[n]) SHORTEN[n] = tk(2) ? Math.ceil(g.t[2] / 3) : 0; // サクヤ[爽涼]の初回短縮（トリガー3）
+});
 const ATTRS = ["火", "水", "風", "土", "雷", "光", "闇"];
 const $ = id => document.getElementById(id);
 const fmt = (x, d = 0) => (x == null || !isFinite(x)) ? "—" : Number(x).toLocaleString("ja-JP", { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -892,8 +925,9 @@ function persistInputs() {
   });
 }
 function enemy() {
-  const k = $("g_kind").value, attr = $("g_attr").value, type = $("g_type").value, sp = $("g_sp").value;
+  const k = $("g_kind").value, type = $("g_type").value; let attr = $("g_attr").value, sp = $("g_sp").value;
   const boss = k === "領域改稿";
+  if (boss) { const [ba, bs] = $("g_boss").value.split("|"); attr = ba; sp = bs; } // 領域改稿はボス名から属性・種族
   const mon = k.startsWith("魔獣") || k === "キザハシ" || boss || k === "レイド";
   if (k === "レイド") return { k, attr, type: "", sp, mon: true, boss: false, raid: true, vault: false, rally: false, facility: false, field: false };
   if (k === "奈落（野戦）") return { k, attr, type, sp: "", mon: false, boss: false, abyss: true, abyssField: true, vault: false, rally: false, facility: false, field: true };
@@ -909,9 +943,10 @@ function enemyTarget(E) {
 }
 function enemyUI() {
   const E = enemy();
-  $("g_sp_l").classList.toggle("hidden", !E.mon || E.k === "キザハシ");
+  $("g_sp_l").classList.toggle("hidden", !E.mon || E.k === "キザハシ" || !!E.boss);
+  $("g_boss_l").classList.toggle("hidden", !E.boss);
   $("g_type_l").classList.toggle("hidden", E.mon || !!E.arena);
-  $("g_attr").closest("label").classList.toggle("hidden", !!E.arena || (!!E.abyss && !E.abyssField));
+  $("g_attr").closest("label").classList.toggle("hidden", !!E.arena || (!!E.abyss && !E.abyssField) || !!E.boss);
   if (E.abyss && !E.abyssField) $("g_type_l").classList.add("hidden");
   $("g_fac_l").classList.toggle("hidden", !E.abyss || !!E.abyssField);
   const notes = {
@@ -944,7 +979,7 @@ $("g_cat").value = catOf($("g_kind").value); fillKinds($("g_kind").value);
 $("g_cat").addEventListener("change", () => { fillKinds(""); $("g_kind").dispatchEvent(new Event("change", { bubbles: true })); });
 $("g_kind").addEventListener("change", () => { enemyUI(); rankDefaults(); rankModeUI(); });
 $("g_fac").addEventListener("change", () => { enemyUI(); rankDefaults(); rankModeUI(); });
-["g_attr", "g_sp", "g_type"].forEach(id => $(id).addEventListener("change", rankModeUI));
+["g_attr", "g_sp", "g_type", "g_boss"].forEach(id => $(id).addEventListener("change", rankModeUI));
 function badgeAdd() {
   const ln = $("h_L").value, sn = $("h_S").value, k = $("h_tg").value;
   let tg = { kind: "long", attr: "", type: null };
@@ -1064,7 +1099,7 @@ function renderVault() {
     <div class="tile hi"><div class="k">治療費の合計</div><div class="v">${fmt(b.cost / 10000, 1)}万</div><div class="s">主力だけなら ${fmt(a.cost / 10000, 1)}万（${fmt(b.cost / a.cost * 100)}%）</div></div>
     <div class="tile"><div class="k">安い枠 1つ</div><div class="v">${fmt(b.slot)}</div><div class="s">${b.slot === 0 ? "主力がT1なので安い枠は使いません" : !b.win ? '<span class="pill bad">全滅して倒せない</span>' : wiped ? '<span class="pill bad">全滅する枠あり。増やして</span>' : `残り ${fmt(Math.min(...b.left.slice(1)))} 人`}</div></div>`;
   const rowsT = [
-    ["主力の兵数", fmt(p.total), fmt(b.slots[0].n)], ["安い枠1つ", "0", fmt(b.slot)],
+    ["主力の兵数", fmt(capOf(L, p.total)), fmt(b.slots[0].n)], ["安い枠1つ", "0", fmt(b.slot)],
     ["撃破までの通常攻撃（報告ターン）", `${a.turns}（${a.turns + 1}）`, `${b.turns}（${b.turns + 1}）`],
     ["負傷の合計", fmt(a.injSum), fmt(b.injSum)], ["重傷（主力）", fmt(a.inj[0] * 0.196), fmt(mainHeavy)], ["重傷（安い枠3つ）", "0", fmt(slotHeavy)],
     ["治療費：食料", fmt(a.res.食料), fmt(b.res.食料)], ["治療費：木材", fmt(a.res.木材), fmt(b.res.木材)], ["治療費：石材", fmt(a.res.石材), fmt(b.res.石材)], ["治療費：赤い資源", fmt(a.res.赤), fmt(b.res.赤)],
@@ -1377,7 +1412,59 @@ function renderEquip() {
 // ---------- まとめ ----------
 function renderAll() { showBase(); renderVault(); renderMonster(); renderEquip(); }
 fillSelects();
+// ---------- 計算の前提（理論値／しゃるる）※自分用ページだけ ----------
+const SOLD_BASE = { 歩: { 4: 408, 3: 306, 2: 204 }, 弓: { 4: 400, 3: 300, 2: 200 }, 騎: { 4: 392, 3: 294, 2: 196 } };
+const SOLD_MAX = { 歩: { 4: 191, 3: 31, 2: 21 }, 弓: { 4: 187, 3: 30, 2: 20 }, 騎: { 4: 183, 3: 29, 2: 19 } };
+const SOLD_ME0 = { 歩: { 4: 150, 3: 31, 2: 21 }, 弓: { 4: 43, 3: 30, 2: 2 }, 騎: { 4: 27, 3: 0, 2: 3 } }; // 11月時点のしゃるる
+const MODE_KEYS = ["chars", "equip"];
+function modeInit() {
+  if (!$("mode_bar")) return;
+  const mode = store.get("mode", "theory"), me = mode === "me";
+  const up = store.get("sold_me", SOLD_ME0); delete up.undefined;
+  if (me) TYPES.forEach(T => [4, 3, 2].forEach(t => { SOLDIER[T][t] = SOLD_BASE[T][t] + (+((up[T] || {})[t]) || 0); }));
+  $("mode_bar").querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === mode)));
+  $("me_box").classList.toggle("hidden", !me);
+  $("mode_note").textContent = me ? "しゃるるの研究状況・ステータス・所持装備で計算中。基本ステータス・使うキャラ・所持装備はモードごとに別々に保存されます。" : "研究は全部最大、装備は全部から選ぶ前提。";
+  $("me_sold").innerHTML = TYPES.map(T => [4, 3, 2].map(t => `<label>${T}兵 T${t}<input type="number" step="1" data-tp="${T}" data-tier="${t}" value="${(up[T] || {})[t] ?? 0}"></label>`).join("")).join("");
+  $("me_sold").querySelectorAll("input").forEach(el => el.addEventListener("change", () => {
+    const u = store.get("sold_me", SOLD_ME0); (u[el.dataset.tp] = u[el.dataset.tp] || {})[el.dataset.tier] = +el.value || 0; store.set("sold_me", u); location.reload(); }));
+  $("mode_bar").querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    const nm = b.dataset.m; if (nm === mode) return;
+    // 基本ステータス・所持キャラ・所持装備をモードごとに入れ替える
+    const ids = [...$("common").querySelectorAll("input[id], select[id]")].map(e => e.id).concat(["e_own"]);
+    const inp = store.get("inputs", {}), cur = {}; ids.forEach(id => { if (inp[id] !== undefined) cur[id] = inp[id]; });
+    MODE_KEYS.forEach(k => { const v = store.get(k, null); if (v !== null) cur["__" + k] = v; });
+    store.set("prof_" + mode, cur);
+    const nx = store.get("prof_" + nm, null);
+    if (nx) { ids.forEach(id => { if (nx[id] !== undefined) inp[id] = nx[id]; }); store.set("inputs", inp);
+      MODE_KEYS.forEach(k => { if (nx["__" + k] !== undefined) store.set(k, nx["__" + k]); else { try { localStorage.removeItem("evst_" + k); } catch (e) { } } }); }
+    else if (nm === "me") { store.set("equip", PRESET_OWN); inp.e_own = true; store.set("inputs", inp); } // 初めて切り替えたときは しゃるるの所持装備だけ
+    else { inp.e_own = false; store.set("inputs", inp); } // 理論値は全装備から選ぶ
+    store.set("mode", nm); location.reload();
+  }));
+}
+modeInit();
+function growUI() {
+  if (!$("me_grow")) return;
+  const g0 = (() => { try { const v = localStorage.getItem("evst_grow"); return v ? JSON.parse(v) : (window.SHARURU_GROW || {}); } catch (e) { return {}; } })();
+  const own = ownedChars().filter(n => CH[n]), raw = {};
+  CHARS_TXT.trim().split("\n").forEach(l => { const f = l.split("|"); raw[f[0]] = [7, 9, 11].map(i => f[i] && +f[i] ? `${f[i + 1]}+${f[i]}%` : "なし"); });
+  const cell = (n, key, i, v, max, tip) => `<td><input type="number" min="1" max="${max}" step="1" data-n="${n}" data-k="${key}" data-i="${i}" value="${v}" title="${tip}" aria-label="${n} ${tip}"></td>`;
+  $("me_grow").innerHTML = `<tr><th>キャラ</th><th class="n">キャラLv</th><th class="n">チャージ</th><th class="n">アクティブ</th><th class="n">トリガー1</th><th class="n">トリガー2</th><th class="n">トリガー3</th></tr>` +
+    own.map(n => { const g = Object.assign({}, GROW_MAX, g0[n] || {}), ch = JSON.stringify(g) === JSON.stringify(GROW_MAX) ? "" : " class=\"hl\"";
+      return `<tr${ch}><td>${n}</td>` + cell(n, "lv", -1, g.lv, 90, "キャラLv") + cell(n, "c", -1, g.c, 7, "チャージスキルLv") + cell(n, "a", -1, g.a, 5, "アクティブスキルLv") +
+        [0, 1, 2].map(i => cell(n, "t", i, g.t[i], 7, `トリガー${i + 1}（Lv7で${raw[n][i]}）`)).join("") + "</tr>"; }).join("");
+  $("me_grow").querySelectorAll("input").forEach(el => el.addEventListener("change", () => {
+    let G = {}; try { const v = localStorage.getItem("evst_grow"); G = v ? JSON.parse(v) : JSON.parse(JSON.stringify(window.SHARURU_GROW || {})); } catch (e) { }
+    const n = el.dataset.n, g = G[n] || (G[n] = JSON.parse(JSON.stringify(GROW_MAX))), v = Math.max(1, Math.min(+el.max, Math.round(+el.value) || 1));
+    el.value = v; if (el.dataset.k === "t") g.t[+el.dataset.i] = v; else g[el.dataset.k] = v;
+    if (JSON.stringify(g) === JSON.stringify(GROW_MAX)) delete G[n];
+    try { localStorage.setItem("evst_grow", JSON.stringify(G)); } catch (e) { }
+    $("me_grow_msg").textContent = "変更しました。「反映する」を押すと計算に入ります。"; }));
+}
+if ($("me_grow_go")) $("me_grow_go").addEventListener("click", () => location.reload());
 persistInputs();
+growUI();
 document.querySelectorAll(".wrap select").forEach(s => { if (s.selectedIndex < 0 && s.options.length) s.selectedIndex = 0; });
 document.querySelectorAll(".charsel, .charsel0").forEach(makeCombo);
 { const bb = parseFloat($("c_bonus").value); if (bb > 0 && bb < 5) { $("c_bonus").value = +((bb - 1) * 100).toFixed(1); $("c_bonus").dispatchEvent(new Event("change")); } }
@@ -1425,16 +1512,19 @@ function jenks(vals, k) { // vals は降順。各グループの先頭indexを�
   for (let g = k; g >= 1; g--) { const i = B[g][j]; starts.unshift(i); j = i; }
   return starts;
 }
-function tierLabels(vals) { // 降順の点数 → ティア名の配列
-  const st = jenks(vals, 5), names = "SABCD", out = [];
-  vals.forEach((v, i) => { let g = 0; while (g + 1 < st.length && i >= st[g + 1]) g++; out.push(names[g]); });
-  return out;
+function tierLabels(vals) { // 降順の点数 → ティア名の配列。同じ点数（表示の小数3桁）は必ず同じティアにする
+  const r = v => Math.round(v * 1000) / 1000;
+  const uq = [...new Set(vals.map(r))].sort((a, b) => b - a); // 同点の数で区切りがずれないよう、ちがう点数ごとに1つずつで区切る
+  const st = jenks(uq, 5), names = "SABCD", tier = new Map();
+  uq.forEach((v, i) => { let g = 0; while (g + 1 < st.length && i >= st[g + 1]) g++; tier.set(v, names[g]); });
+  return vals.map(v => tier.get(r(v)));
 }
 const pillT = t => `<span class="pill tier${t}">${t}</span>`;
 $("t_go").addEventListener("click", () => buildTier());
 function tierModeUI() {
-  const ab = $("t_mode").value === "abyss", sh = (id, on) => $(id).classList.toggle("hidden", !on);
-  sh("t_lv_l", !ab); sh("t_zsup_l", ab); sh("t_deb_l", ab); sh("t_note_vault", !ab); sh("t_note_abyss", ab); sh("t_third_w", ab);
+  const md = $("t_mode").value, ab = md === "abyss", bk = md === "baika", sh = (id, on) => $(id).classList.toggle("hidden", !on);
+  sh("t_lv_l", md === "vault"); sh("t_zsup_l", ab); sh("t_deb_l", ab); sh("t_note_vault", md === "vault"); sh("t_note_abyss", ab); sh("t_note_baika", bk); sh("t_third_w", ab);
+  sh("t_mlv_l", bk); sh("t_mrally_l", bk);
   $("t_sub_h").textContent = ab ? "ソロ（2nd）" : "ソロ（サブ）"; $("t_pair_h").textContent = ab ? "編成（3人）" : "ペア";
   ["t_lead", "t_sub", "t_third", "t_pair"].forEach(id => $(id).innerHTML = ""); $("t_status").textContent = "";
 }
@@ -1446,7 +1536,7 @@ const tierRow = (arr, unit) => { const b = arr[0] ? arr[0].a : 1, tl = tierLabel
 const FACS = [["S", "歩", "雷"], ["F", "騎", "光"], ["A", "弓", "風"], ["D", "弓", "土"], ["P左", "歩", "水"], ["P右", "歩", "火"]];
 function buildTierAbyss() {
   const c = common(), lt = $("t_ltype").value, sup = (parseFloat($("t_zsup").value) || 0) / 100, debS = $("t_deb").value === "1";
-  const own = ownedChars().filter(n => CH[n]);
+  const own = NAMES.slice(); // ティア表は所持に関係なく全キャラ
   if (own.length < 3) { $("t_status").textContent = "使うキャラが3人以上必要です。"; return; }
   const run = (f, L, S, R, mt) => runLong(L, S, { attr: f[2], type: f[1], T: 100, rally: true, facility: true, field: false, multiP: 0, counter: true, main: mt, total: c.total, base: c.base, bonus: formBonus(L, S, R, sup), N: c.N, CH: c.CH, third: R, noDebuff: f[0] === "S" && !debS }).total;
   const roles = [{}, {}, {}], best = [], cand = new Map();
@@ -1493,10 +1583,73 @@ function buildTierAbyss() {
   };
   setTimeout(step, 20);
 }
+// ---------- ティア表（魔獣狩り・素材倍化） ----------
+// 魔獣狩りは自軍が何部隊いても相手は1体。たいていリーダーかサブの最初のチャージで倒しきる → 単体チャージの強さを見る
+// 評価：素材倍化（最優先）＞ 最初のチャージ（リーダー＋サブ）の与ダメ ＞ 行軍速度
+const SPECIES = ["悪魔", "超獣", "龍", "妖魔", "堕天", "機甲", "不浄", "精霊"];
+const BK_W = { ch: 0.05, spd: 0.02 }; // 総合点＝倍化の点数＋0.05×チャージ（最高比）＋0.02×行軍速度（最高比）
+function buildTierBaika() {
+  const c = common(), lt = $("t_ltype").value, lv = +$("t_mlv").value || 30, rally = $("t_mrally").value === "1";
+  const own = NAMES.slice(); // ティア表は所持に関係なく全キャラ
+  if (own.length < 2) { $("t_status").textContent = "使うキャラが2人以上必要です。"; return; }
+  const t0 = performance.now(); let nrun = 0, si = 0;
+  const pairs = [];
+  for (const ln of own) { const L = CH[ln]; if (!L.pw) continue;
+    for (const mt of (L.tp === "統率" ? TYPES : [L.tp]).filter(x => !lt || x === lt))
+      for (const sn of own) if (sn !== ln) pairs.push({ ln, sn, mt, spd: speedOf([L, CH[sn]], mt), s: [], ch: [], cL: [], cS: [] });
+  }
+  const best = [], roles = [{}, {}];
+  const base = { total: c.total, base: c.base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, lv, rally };
+  $("t_go").disabled = true;
+  const step = () => {
+    const sp = SPECIES[si];
+    for (const p of pairs) {
+      const L = CH[p.ln], S = CH[p.sn], o = Object.assign({ attr: L.at, species: sp, main: p.mt }, base);
+      p.bk = baikaOf([L, S], sp);
+      p.win = runMonster(L, S, o).win; nrun++;
+      if (p.win) { const r = runMonster(L, S, Object.assign({}, o, { custom: { HP: Infinity }, maxT: 14 })); nrun++; // 最初のチャージ（リーダー・サブ）まで
+        p.cl = r.parts.chL; p.cs = r.parts.chS; } else { p.cl = p.cs = 0; }
+    }
+    const killers = pairs.filter(p => p.win);
+    const bs = killers.length ? 1 + Math.max(...killers.map(p => p.bk)) : 1; best.push(bs);
+    const bR = [{}, {}];
+    for (const p of pairs) {
+      const sc = p.win ? (1 + p.bk) / bs : 0;
+      p.s.push(sc); p.ch.push(p.cl + p.cs); p.cL.push(p.cl); p.cS.push(p.cs);
+      [[0, p.ln, p.cl], [1, p.sn, p.cs]].forEach(([k, n, own]) => { const cur = bR[k][n];
+        if (!cur || sc > cur.sc + 1e-9 || (Math.abs(sc - cur.sc) < 1e-9 && own > cur.own)) bR[k][n] = { sc, own, mt: p.mt }; });
+    }
+    bR.forEach((b, k) => { for (const n in b) { const o = roles[k][n] || (roles[k][n] = { n, s: [], ch: [], mts: new Set(), top: [], weak: [] });
+      o.s.push(b[n].sc); o.ch.push(b[n].own); o.mts.add(b[n].mt); if (b[n].sc >= 0.9999) o.top.push(sp); if (b[n].sc < 0.8) o.weak.push(sp); } });
+    si++; $("t_status").textContent = `計算中… ${si}/${SPECIES.length}（${sp}まで）`;
+    if (si < SPECIES.length) setTimeout(step, 0); else setTimeout(finish, 0);
+  };
+  const avg = a => a.reduce((x, y) => x + (y || 0), 0) / SPECIES.length;
+  const scoreAll = arr => { const mc = Math.max(1, ...arr.map(o => o.chA)), ms = Math.max(1e-9, ...arr.map(o => o.spdA));
+    arr.forEach(o => { o.a = o.bkA + BK_W.ch * o.chA / mc + BK_W.spd * o.spdA / ms; }); return arr.sort((x, y) => y.a - x.a); };
+  const finish = () => {
+    const top = +$("r_n").value || 20;
+    [["t_lead", 0], ["t_sub", 1]].forEach(([id, k]) => {
+      const arr = scoreAll(Object.values(roles[k]).map(o => Object.assign(o, { bkA: avg(o.s), chA: avg(o.ch), spdA: Math.max(...[...o.mts].map(mt => speedOf([CH[o.n]], mt))) })));
+      const b = arr[0] ? arr[0].a : 1, tl = tierLabels(arr.map(o => o.a));
+      $(id).innerHTML = `<tr><th>ティア</th><th>キャラ</th><th class="n">総合</th><th class="n">1位比</th><th class="n">倍化の点数</th><th class="n">${k ? "サブ" : "リーダー"}のチャージ</th><th class="n">行軍速度</th><th class="n">1位の数</th><th>苦手な種族</th></tr>` +
+        arr.map((o, i) => `<tr><td>${pillT(tl[i])}</td><td>${o.n}<span class="note">（${CH[o.n].at}・${CH[o.n].tp}）</span></td><td class="n">${fmt(o.a, 3)}</td><td class="n">${fmt(o.a / b, 3)}</td><td class="n">${fmt(o.bkA, 3)}</td><td class="n">${fmt(o.chA)}</td><td class="n">+${fmt(o.spdA * 100, 0)}%</td><td class="n">${o.top.length}</td><td class="note">${o.weak.length ? (o.weak.length > 6 ? o.weak.length + "種族" : o.weak.join("、")) : "—"}</td></tr>`).join("");
+    });
+    const pr = scoreAll(pairs.filter(p => p.s.some(x => x > 0)).map(p => ({ ...p, bkA: avg(p.s), chA: avg(p.ch), spdA: p.spd })))
+      .filter((p, i, arr) => arr.findIndex(q => q.ln === p.ln && q.sn === p.sn) === i); // 統率リーダーは一番いい兵種だけ
+    const pb = pr[0] ? pr[0].a : 1, shown = pr.slice(0, Math.max(top, 30)), tp = tierLabels(pr.map(p => p.a));
+    $("t_pair").innerHTML = `<tr><th>ティア</th><th>リーダー・サブ</th><th>主力</th><th class="n">総合</th><th class="n">1位比</th><th class="n">倍化の点数</th><th class="n">${SPECIES.join("／")}</th><th class="n">最初のチャージ</th><th class="n">行軍速度</th></tr>` +
+      shown.map((p, i) => `<tr><td>${pillT(tp[i])}</td><td>${p.ln}・${p.sn}</td><td>${p.mt}兵</td><td class="n">${fmt(p.a, 3)}</td><td class="n">${fmt(p.a / pb, 3)}</td><td class="n">${fmt(p.bkA, 3)}</td><td class="n">${p.s.map(x => x === 0 ? "×" : fmt(x, 2)).join("／")}</td><td class="n">${fmt(p.chA)}</td><td class="n">+${fmt(p.spd * 100, 0)}%</td></tr>`).join("");
+    $("t_status").textContent = `8種族 × ${fmt(nrun)}回の計算（${fmt((performance.now() - t0) / 1000, 1)}秒）。種族ごとの最高の平均ドロップ数：${SPECIES.map((s, i) => `${s} ${fmt(best[i], 2)}個`).join("・")}`;
+    $("t_go").disabled = false;
+  };
+  setTimeout(step, 20);
+}
 function buildTier() {
   if ($("t_mode").value === "abyss") return buildTierAbyss();
+  if ($("t_mode").value === "baika") return buildTierBaika();
   const c = common(), lv = +$("t_lv").value, lt = $("t_ltype").value;
-  const own = ownedChars().filter(n => CH[n]);
+  const own = NAMES.slice(); // ティア表は所持に関係なく全キャラ
   const VARS = []; ATTRS.forEach(a => TYPES.forEach(T => VARS.push([a, T])));
   const pairs = {}, lead = {}, sub = {};
   const t0 = performance.now();
