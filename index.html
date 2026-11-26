@@ -193,7 +193,7 @@ ul.tight{margin:4px 0;padding-left:20px}
       <label for="v_S">サブリーダー<select id="v_S" class="charsel"></select></label>
       <label for="v_main">主力の兵種<select id="v_main" class="typesel"></select></label>
       <label for="v_tier">主力の段階<select id="v_tier"><option value="4">T4</option><option value="3">T3</option><option value="2">T2</option><option value="1">T1</option></select></label>
-      <label for="v_margin">安い枠の余裕<select id="v_margin"><option value="1.2">余裕（×1.2）</option><option value="1.1" selected>普通（×1.1）</option><option value="1.05">ギリギリ（×1.05）</option></select></label>
+      <label for="v_margin">安い枠の余裕<select id="v_margin"><option value="1.2">余裕（×1.2）</option><option value="1.1" selected>普通（×1.1）</option></select></label>
       <label class="full" for="v_slot">安い枠（T1）1つの兵数<input id="v_slot" type="number" step="1000" placeholder="空欄＝おすすめの数"></label>
     </div>
     <p class="note" id="v_hint"></p>
@@ -1306,6 +1306,21 @@ function renderRank() {
   }
   res.sort((a, b) => a.key - b.key);
   const best = res[0];
+  // 1位と同じ結果にするには、キャラ効果なしの攻撃%をあと何%足せばいいか（二分探索）
+  const needAtk = r => {
+    if (r === best) return "基準";
+    const L = CH[r.L], S = CH[r.S], mt = r.mt;
+    const ok = d => { const base = Object.assign({}, c.base); base[mt] += d;
+      if (m === "vault") { const x = runVault(L, S, { lv: +$("r_vlv").value, attr: E.attr, type: E.type, main: mt, total: c.total, base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() }).withSlot; return x.cost <= best.cost + 0.5; }
+      if (m === "monster") { const x = runMonster(L, S, { lv: +$("r_lv").value, attr: E.attr, species: E.sp, rally: E.rally, main: mt, total: c.total, base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH }); return x.win && x.turns <= best.turns; }
+      const x = runLong(L, S, { attr: E.attr, type: E.k === "キザハシ" ? "統率" : E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: ($("r_ctr").value === "1"), main: mt, total: c.total, base, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() });
+      return x.total >= best.tot * 0.9995; };
+    if (ok(0)) return "＋0%";
+    let lo = 0, hi = 5; while (!ok(hi)) { hi *= 2; if (hi > 80) return "—"; }
+    for (let k = 0; k < 14; k++) { const mid = (lo + hi) / 2; if (ok(mid)) hi = mid; else lo = mid; }
+    return "＋" + fmt(hi * 100) + "%";
+  };
+  const showNeed = m !== "boss" && !(m === "monster" && $("r_mobj").value === "baika");
   let h;
   if (m === "boss") {
     // キャラがかぶらない2部隊の組み合わせ（上位から探す）
@@ -1324,12 +1339,12 @@ function renderRank() {
       res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}（${r.mt}兵）</td><td class="n">${fmt(r.tot / best.tot, 3)}</td><td class="n">${fmt(r.sh[0] * 100)}／${fmt(r.sh[1] * 100)}／${fmt(r.sh[2] * 100)}%</td></tr>`).join("");
     if (!pairs.length) h = `<tr><td>キャラがかぶらない2部隊を作るには、使うキャラが4人以上必要です。</td></tr>`;
   } else if (m === "vault") {
-    h = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">撃破（報告）</th><th class="n">安い枠</th><th class="n">負傷</th><th class="n">治療費</th><th class="n">1位比</th></tr>` +
-      res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${r.win ? `${r.turns}（${r.turns + 1}）` : "×"}</td><td class="n">${fmt(r.slot)}</td><td class="n">${fmt(r.inj)}</td><td class="n">${fmt(r.cost / 10000, 1)}万</td><td class="n">${fmt(r.cost / best.cost * 100)}%</td></tr>`).join("");
+    h = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">撃破（報告）</th><th class="n">安い枠</th><th class="n">負傷</th><th class="n">治療費</th><th class="n">1位比</th><th class="n">1位と並ぶ攻撃%</th></tr>` +
+      res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${r.win ? `${r.turns}（${r.turns + 1}）` : "×"}</td><td class="n">${fmt(r.slot)}</td><td class="n">${fmt(r.inj)}</td><td class="n">${fmt(r.cost / 10000, 1)}万</td><td class="n">${fmt(r.cost / best.cost * 100)}%</td><td class="n">${needAtk(r)}</td></tr>`).join("");
   } else if (m === "monster") {
     const eqb = (parseFloat($("m_bk").value) || 0) / 100;
-    const row = (r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${fmt((r.bk + eqb) * 100, 1)}%</td><td class="n">${fmt(1 + r.bk + eqb, 2)}</td><td class="n">+${fmt(r.spd * 100, 1)}%</td><td class="n">${r.win ? `${r.turns}（${r.turns + 1}）` : "×"}</td><td class="n">${fmt(r.inj)}</td></tr>`;
-    const head = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">素材倍化</th><th class="n">素材（平均）</th><th class="n">行軍速度</th><th class="n">撃破（報告）</th><th class="n">負傷</th></tr>`;
+    const row = (r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${fmt((r.bk + eqb) * 100, 1)}%</td><td class="n">${fmt(1 + r.bk + eqb, 2)}</td><td class="n">+${fmt(r.spd * 100, 1)}%</td><td class="n">${r.win ? `${r.turns}（${r.turns + 1}）` : "×"}</td><td class="n">${fmt(r.inj)}</td>${showNeed ? `<td class="n">${needAtk(r)}</td>` : ""}</tr>`;
+    const head = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">素材倍化</th><th class="n">素材（平均）</th><th class="n">行軍速度</th><th class="n">撃破（報告）</th><th class="n">負傷</th>${showNeed ? `<th class="n">1位と並ぶ攻撃%</th>` : ""}</tr>`;
     h = head + res.slice(0, top).map(row).join("");
     if ($("r_mobj").value === "baika" && E.k === "魔獣（ソロ）") { // キャラがかぶらない5部隊（倒せるものから倍化の高い順）
       // 倒せる編成（同じ2人は1つにまとめる）の上位80から、キャラがかぶらない5部隊を「倍化の合計→行軍速度の合計」が最大になるように探す
@@ -1350,8 +1365,8 @@ function renderRank() {
       h = `<tr><th colspan="8">おすすめの5部隊（キャラがかぶらない・倒せる編成から倍化の高い順）：素材の合計 平均${fmt(sumB, 2)}個／1周</th></tr>` + head + team.map(row).join("") + `<tr><th colspan="8">ランキング</th></tr>` + h;
     }
   } else {
-    h = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">1位比</th><th class="n">通常</th><th class="n">反撃</th><th class="n">チャージ</th></tr>` +
-      res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${fmt(r.tot / best.tot, 3)}</td><td class="n">${fmt(r.sh[0] * 100)}%</td><td class="n">${fmt(r.sh[1] * 100)}%</td><td class="n">${fmt(r.sh[2] * 100)}%</td></tr>`).join("");
+    h = `<tr><th>順位</th><th>リーダー・サブ</th><th>主力</th><th class="n">1位比</th><th class="n">通常</th><th class="n">反撃</th><th class="n">チャージ</th><th class="n">1位と並ぶ攻撃%</th></tr>` +
+      res.slice(0, top).map((r, i) => `<tr><td>${i + 1}</td><td>${r.L}・${r.S}</td><td>${r.mt}兵</td><td class="n">${fmt(r.tot / best.tot, 3)}</td><td class="n">${fmt(r.sh[0] * 100)}%</td><td class="n">${fmt(r.sh[1] * 100)}%</td><td class="n">${fmt(r.sh[2] * 100)}%</td><td class="n">${needAtk(r)}</td></tr>`).join("");
   }
   $("r_table").innerHTML = res.length ? h : `<tr><td>使うキャラが2人以上必要です。「使うキャラ」でチェックしてください。</td></tr>`;
   $("r_status").textContent = `${fmt(res.length)}通りを計算（${fmt((performance.now() - t0) / 1000, 1)}秒）`;
@@ -1492,6 +1507,7 @@ function growUI() {
 if ($("me_grow_go")) $("me_grow_go").addEventListener("click", () => location.reload());
 persistInputs();
 growUI();
+if (!$("v_margin").value) $("v_margin").value = "1.1"; // 前に「ギリギリ」を選んでいた人は「普通」に
 globalThis.SLOT_MARGIN = parseFloat($("v_margin").value) || 1.1;
 $("v_margin").addEventListener("change", () => { globalThis.SLOT_MARGIN = parseFloat($("v_margin").value) || 1.1; });
 document.querySelectorAll(".wrap select").forEach(s => { if (s.selectedIndex < 0 && s.options.length) s.selectedIndex = 0; });
