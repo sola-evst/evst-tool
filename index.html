@@ -599,9 +599,14 @@ function runVault(L, S, p) {
   const tot = capOf(L, p.total);
   s = Math.min(s, Math.floor(tot / 4 / 1000) * 1000);
   const ct = p.cheapTier || 1;
-  const slots = [{ type: p.main, tier: p.mainTier || 4, n: tot - 3 * s }].concat(TYPES.map(T => ({ type: T, tier: ct, n: s })));
-  const r = sim(L, S, slots, tg, o);
-  const c = costOf(slots, r.inj, V_HEAVY);
+  const auto = !(p.slot > 0) && s > 0, cap = Math.floor(tot / 4 / 1000) * 1000;
+  let slots, r, c;
+  for (let k = 0; k < 8; k++) { // おすすめの枠が計算上全滅するなら、全滅しない大きさまで1,000ずつ増やす（主力が減るぶん戦闘が長引くため）
+    slots = [{ type: p.main, tier: p.mainTier || 4, n: tot - 3 * s }].concat(TYPES.map(T => ({ type: T, tier: ct, n: s })));
+    r = sim(L, S, slots, tg, o); c = costOf(slots, r.inj, V_HEAVY);
+    if (!auto || s >= cap || r.left.slice(1).every(x => x > 0.5)) break;
+    s = Math.min(cap, s + 1000);
+  }
   return { atk, short, mainOnly: Object.assign(r0, c0), withSlot: Object.assign(r, c, { slot: s, slots }) };
 }
 // 魔獣
