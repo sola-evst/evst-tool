@@ -542,7 +542,7 @@ function sim(L, S, slots, tg, o) {
       redAcc += Math.max(0.1, 1 - rr); }
     // 被害
     let loss = 0;
-    if (E.atk) {
+    if (E.atk || E.rate) {
       let vadv;
       if (unit) {
         const vshare = tg.type ? alive.filter(i => TBEAT[tg.type] === slots[i].type).reduce((a, i) => a + n[i], 0) / nn : 0;
@@ -553,7 +553,8 @@ function sim(L, S, slots, tg, o) {
       if (u >= 1 && (u - 1) % 10 < (L.bd || 2) && L.red) red += L.red;
       if (us >= 1 && (us - 1) % 10 < (S.bd || 2) && S.red) red += S.red;
       const vch = E.charge && t >= 12 && (t - 12) % 10 === 0 ? E.charge : 0;
-      loss = (E.K || 1) * E.atk / (1 + o.ourDef) * vadv * tierf * Math.pow(Math.max(hp, 0) / E.HP, EX) * Math.max(0.1, 1 - red) * (1 + vch);
+      loss = E.rate ? E.rate * nn * vadv * tierf * Math.max(0.1, 1 - red) // キザハシ：相手の通常攻撃で毎ターン兵の一定割合が減る
+        : (E.K || 1) * E.atk / (1 + o.ourDef) * vadv * tierf * Math.pow(Math.max(hp, 0) / E.HP, EX) * Math.max(0.1, 1 - red) * (1 + vch);
       let rem = loss;
       while (rem > 1e-6) {
         const al = n.map((x, i) => i).filter(i => n[i] > 1e-9);
@@ -625,14 +626,14 @@ function runMonster(L, S, p) {
   const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: p.def, N: p.N, CH: p.CH, short, enemy: E, maxT: p.maxT || 120, noDebuff: p.noDebuff });
   return Object.assign(r, { atk, short, enemy: E, heavy: r.injSum * 0.005 });
 }
-// 長期戦（施設・集結など）：被害なしで T ターンの与ダメ合計
+// 長期戦（施設・集結など）：T ターンの与ダメ合計。被害なし（キザハシだけ p.hit で相手の通常攻撃を受ける）
 function runLong(L, S, p) {
   const R = p.third || null;
   const tg = { kind: "long", attr: p.attr, type: p.type, rally: p.rally, facility: p.facility, field: p.field, multiP: p.multiP || 0 };
   const atk = atkFor(L, S, tg, p.base, R);
   const short = Math.min(7, (SHORTEN[L.n] || 0) + (SHORTEN[S.n] || 0) + (R ? SHORTEN[R.n] || 0 : 0));
   const slots = [{ type: p.main, tier: 4, n: capOf(L, p.total) }];
-  const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: 0, N: p.N, CH: p.CH, short, third: R, enemy: { HP: Infinity, atk: 0, def: 0 }, maxT: p.T, noCounter: !p.counter, noDebuff: p.noDebuff });
+  const r = sim(L, S, slots, tg, { atk, bonus: p.bonus, ourDef: 0, N: p.N, CH: p.CH, short, third: R, enemy: { HP: Infinity, atk: 0, def: 0, rate: p.hit || 0 }, maxT: p.T, noCounter: !p.counter, noDebuff: p.noDebuff });
   if (!p.counter) { r.total -= r.parts.ctr; r.parts.ctr = 0; }
   return Object.assign(r, { atk });
 }
@@ -1177,9 +1178,11 @@ $("r_none").addEventListener("click", () => { store.set("chars", []); renderChar
 function rankModeUI() {
   const E = enemy(), m = rankMode();
   const show = (id, on) => $(id).classList.toggle("hidden", !on);
-  show("r_vlv_l", m === "vault"); show("r_lv_l", m === "monster"); show("r_mobj_l", m === "monster"); show("r_T_l", m === "long" || m === "boss" || m === "abyss" || m === "raid"); show("r_ctr_l", m === "long" || m === "boss" || m === "abyss"); show("r_abyss", m === "abyss"); show("r_deb_l", isComp(E)); show("r_raid", m === "raid"); show("r_boss", m === "boss"); show("r_arena", m === "arena");
-  $("r_enote").textContent = E.abyssField ? `奈落の野戦（相手 ${E.attr}・${E.type}兵）で、3人編成を決めたターン数の「与ダメ×耐久」が大きい順に並べます。耐久は被ダメ軽減・回復から。` : m === "raid" ? `レイド（${E.attr}・${E.sp}）で、3人編成を決めたターン数の与ダメ（通常・反撃・チャージ・アクティブ）が多い順に並べます。` : m === "abyss" ? `奈落の施設（${E.type}兵・${E.attr}）への集結攻撃で、3人編成（リーダー・2nd・3rd）を決めたターン数の与ダメが多い順に並べます。編成ボーナスは自動計算＋サポート。` : m === "arena" ? "アリーナ（T3 110,000）で、3人編成を「与ダメ×耐久」の多い順に並べます。下に、キャラがかぶらないおすすめの5部隊も出します。" : m === "boss" ? `${E.k}（${E.attr}・${E.sp}）で、キャラがかぶらない2部隊の組み合わせを、決めたターン数の与ダメ合計が多い順に並べます。` : m === "vault" ? `宝庫（${E.attr}・${E.type}兵）で、治療費が安い順に並べます。` : m === "monster" ? ($("r_mobj").value === "baika" ? `${E.k}（${E.attr}・${E.sp}・Lv${$("r_lv").value}）を倒せる編成の中で、素材倍化が高い順に並べます（同じなら行軍速度が速い順＝同じ兵種どうしの組み合わせが上、その次に早く倒せる順）。${E.k === "魔獣（ソロ）" ? "下に、キャラがかぶらないおすすめの5部隊も出します。" : "集結の倍化は参加者それぞれなので、集結主（自分）の倍化です。"}` : `${E.k}（${E.attr}・${E.sp}）で、早く倒せる順に並べます。`) : `${E.k}（${E.attr}・${E.type}兵）で、決めたターン数の与ダメが多い順に並べます。`;
+  show("r_vlv_l", m === "vault"); show("r_lv_l", m === "monster"); show("r_mobj_l", m === "monster"); show("r_T_l", m === "long" || m === "boss" || m === "abyss" || m === "raid"); show("r_ctr_l", (m === "long" && E.k !== "キザハシ") || m === "boss" || m === "abyss"); show("r_abyss", m === "abyss"); show("r_deb_l", isComp(E)); show("r_raid", m === "raid"); show("r_boss", m === "boss"); show("r_arena", m === "arena");
+  $("r_enote").textContent = E.k === "キザハシ" ? `キザハシ（${E.attr}）で、決めたターン数の与ダメが多い順に並べます。こっちの反撃はなし、そのかわり相手の通常攻撃で毎ターン兵が約0.34%ずつ減っていく前提です（相手の属性が有利なら1.114倍減る）。兵が減ると与ダメも下がります。` : E.abyssField ? `奈落の野戦（相手 ${E.attr}・${E.type}兵）で、3人編成を決めたターン数の「与ダメ×耐久」が大きい順に並べます。耐久は被ダメ軽減・回復から。` : m === "raid" ? `レイド（${E.attr}・${E.sp}）で、3人編成を決めたターン数の与ダメ（通常・反撃・チャージ・アクティブ）が多い順に並べます。` : m === "abyss" ? `奈落の施設（${E.type}兵・${E.attr}）への集結攻撃で、3人編成（リーダー・2nd・3rd）を決めたターン数の与ダメが多い順に並べます。編成ボーナスは自動計算＋サポート。` : m === "arena" ? "アリーナ（T3 110,000）で、3人編成を「与ダメ×耐久」の多い順に並べます。下に、キャラがかぶらないおすすめの5部隊も出します。" : m === "boss" ? `${E.k}（${E.attr}・${E.sp}）で、キャラがかぶらない2部隊の組み合わせを、決めたターン数の与ダメ合計が多い順に並べます。` : m === "vault" ? `宝庫（${E.attr}・${E.type}兵）で、治療費が安い順に並べます。` : m === "monster" ? ($("r_mobj").value === "baika" ? `${E.k}（${E.attr}・${E.sp}・Lv${$("r_lv").value}）を倒せる編成の中で、素材倍化が高い順に並べます（同じなら行軍速度が速い順＝同じ兵種どうしの組み合わせが上、その次に早く倒せる順）。${E.k === "魔獣（ソロ）" ? "下に、キャラがかぶらないおすすめの5部隊も出します。" : "集結の倍化は参加者それぞれなので、集結主（自分）の倍化です。"}` : `${E.k}（${E.attr}・${E.sp}）で、早く倒せる順に並べます。`) : `${E.k}（${E.attr}・${E.type}兵）で、決めたターン数の与ダメが多い順に並べます。`;
 }
+// キザハシ：こっちの反撃はなし、相手（ファルソディオ）の通常攻撃で毎ターン兵が約0.34%減る（11/14 集結の戦闘レポート：156ターンで負傷122万／230万）。属性不利なら×1.114
+const KIZA_HIT = 0.0034;
 // ほかの人と与ダメを競うイベント：奈落のS・キザハシ・領域改稿・泉戦（施設攻撃の集結）
 function isComp(E) { E = E || enemy(); return E.k === "領域改稿" || E.k === "キザハシ" || E.k === "施設攻撃（集結）" || (E.abyss && $("g_fac").value === "歩|雷"); }
 const noDeb = () => isComp() && $("r_deb").value !== "1";
@@ -1304,7 +1307,7 @@ function renderRank() {
           const key = $("r_mobj").value === "baika" ? (r.win ? -bk * 1e6 - spd * 1e3 + r.turns / 1000 : 1e12 - r.total / 1e9) : (r.win ? r.turns : 999) - r.total / 1e9;
           res.push({ L: ln, S: sn, mt, key, turns: r.turns, win: r.win, inj: r.injSum, avg: r.total / r.turns, bk, spd });
         } else {
-          const r = runLong(L, S, { attr: E.attr, type: E.k === "キザハシ" ? "統率" : E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: ($("r_ctr").value === "1"), main: mt, total: c.total, base: c.base, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() });
+          const r = runLong(L, S, { attr: E.attr, type: E.k === "キザハシ" ? "統率" : E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: E.k !== "キザハシ" && ($("r_ctr").value === "1"), hit: E.k === "キザハシ" ? KIZA_HIT : 0, main: mt, total: c.total, base: c.base, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() });
           const tot = r.total; res.push({ L: ln, S: sn, mt, key: -tot, tot, sh: [r.parts.nrm / tot, r.parts.ctr / tot, (r.parts.chL + r.parts.chS) / tot] });
         }
       }
@@ -1319,7 +1322,7 @@ function renderRank() {
     const ok = d => { const base = Object.assign({}, c.base); base[mt] += d;
       if (m === "vault") { const x = runVault(L, S, { lv: +$("r_vlv").value, attr: E.attr, type: E.type, main: mt, total: c.total, base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() }).withSlot; return x.cost <= best.cost + 0.5; }
       if (m === "monster") { const x = runMonster(L, S, { lv: +$("r_lv").value, attr: E.attr, species: E.sp, rally: E.rally, main: mt, total: c.total, base, def: c.def, bonus: c.bonus, N: c.N, CH: c.CH }); return x.win && x.turns <= best.turns; }
-      const x = runLong(L, S, { attr: E.attr, type: E.k === "キザハシ" ? "統率" : E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: ($("r_ctr").value === "1"), main: mt, total: c.total, base, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() });
+      const x = runLong(L, S, { attr: E.attr, type: E.k === "キザハシ" ? "統率" : E.type, T: +$("r_T").value, rally: E.rally, facility: E.facility, field: E.field, counter: E.k !== "キザハシ" && ($("r_ctr").value === "1"), hit: E.k === "キザハシ" ? KIZA_HIT : 0, main: mt, total: c.total, base, bonus: c.bonus, N: c.N, CH: c.CH, noDebuff: noDeb() });
       return x.total >= best.tot * 0.9995; };
     if (ok(0)) return "＋0%";
     let lo = 0, hi = 5; while (!ok(hi)) { hi *= 2; if (hi > 80) return "—"; }
